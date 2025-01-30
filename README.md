@@ -1,6 +1,5 @@
-# Gunzing Team Opd.js 
 
-# Baseline Features: Evidence Identification System with Image Processing
+# Baseline Features: Evidence Identification System with Image Processing 1.0
   ระบุวัตถุพยานด้วยเทคโนโลยีการประมวลผลภาพ
 
 
