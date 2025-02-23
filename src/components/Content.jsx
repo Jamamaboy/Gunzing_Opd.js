@@ -5,7 +5,7 @@ function Content() {
     <div className="p-6 h-[80vh] flex justify-center items-center relative">
       <div className="flex w-3/4">
         <img
-          src="https://oyster.ignimgs.com/mediawiki/apis.ign.com/battlefield-3/4/43/G18.png"
+          src="https://www.hfocus.org/sites/default/files/u11/yaaaekpwd.jpg"
           alt="ปืน"
           className="w-96 h-60 object-cover rounded-lg shadow"
         />
@@ -15,16 +15,14 @@ function Content() {
           
           <div className="flex-1">
             <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-semibold">ปืน-ยี่ห้อ-รุ่น</h1>
+              <h1 className="text-3xl font-semibold">ยาเสพติด ก.</h1>
               <FaShareSquare className="text-gray-500 cursor-pointer text-3xl hover:text-gray-700 transition" />
             </div>
 
             <div className="mt-6 space-y-2">
               <p className="text-gray-600 font-semibold text-lg">รายละเอียด</p>
               <p className="text-gray-700 text-lg">ประเภท: พก</p>
-              <p className="text-gray-700 text-lg">ยี่ห้อ:XXXXXXXX</p>
-              <p className="text-gray-700 text-lg">รุ่น:XXXXXXXXXX</p>
-              <p className="text-gray-700 text-lg">จุดสังเกตเลขประจำปืน:XXXXXXXXXXXXXX</p>
+              <p className="text-gray-700 text-lg">แหล่งผลิต:XXXXXXXX</p>
             </div>
           </div>
 

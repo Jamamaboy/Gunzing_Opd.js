@@ -8,9 +8,8 @@ function InformationBar() {
   return (
     <nav className="border-b bg-white p-4 flex justify-center space-x-4 text-gray-700">
       {[
-        { path: "/", label: "ข้อมูลอาวุธ" },
+        { path: "/", label: "ข้อมูลเบื้องต้น" },
         { path: "/images", label: "คลังภาพ" },
-        { path: "/bullets", label: "กระสุน" },
         { path: "/history", label: "ประวัติ" },
         { path: "/map", label: "แผนที่" },
       ].map(({ path, label }) => (
