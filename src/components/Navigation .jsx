@@ -20,23 +20,23 @@ const Navigation = () => {
   }, []);
 
   const allMenuItems = [
-    { icon: <FiHome size={28} />, text: "หน้าหลัก", href: "#", showInBottom: true },
-    { icon: <FiClock size={28} />, text: "ประวัติ", href: "#", showInBottom: true },
-    { icon: <FiCamera size={28} />, text: "ถ่ายภาพ", href: "#", showInBottom: true },
-    { icon: <FiMap size={28} />, text: "แผนที่", href: "#", showInBottom: true },
-    { icon: <FiDownload size={28} />, text: "อัพโหลดภาพ", href: "#", showInBottom: false },
-    { icon: <FiFolder size={28} />, text: "บัญชีของพยาน", href: "#", showInBottom: false },
-    { icon: <FiBarChart2 size={28} />, text: "สถิติ", href: "#", showInBottom: false },
+    { icon: <FiHome size={24} />, text: "หน้าหลัก", href: "/#", showInBottom: true },
+    { icon: <FiClock size={24} />, text: "ประวัติ", href: "/#", showInBottom: true },
+    { icon: <FiCamera size={24} />, text: "ถ่ายภาพ", href: "/Camera", showInBottom: true },
+    { icon: <FiMap size={24} />, text: "แผนที่", href: "/#", showInBottom: true },
+    { icon: <FiDownload size={24} />, text: "อัพโหลดภาพ", href: "/#", showInBottom: false },
+    { icon: <FiFolder size={24} />, text: "บัญชีของพยาน", href: "/#", showInBottom: false },
+    { icon: <FiBarChart2 size={24} />, text: "สถิติ", href: "/#", showInBottom: false },
   ];
 
   const bottomNavItems = allMenuItems.filter(item => item.showInBottom);
   const moreMenuItems = allMenuItems.filter(item => !item.showInBottom);
 
   const Sidebar = () => (
-    <div className={`h-full ${isSidebarOpen ? "w-64" : "w-16"} bg-[#2C2C2C] text-white flex flex-col transition-all duration-300 overflow-hidden`}>
+    <div className={`h-full ${isSidebarOpen ? "w-60" : "w-16"} bg-[#2C2C2C] text-white flex flex-col transition-all duration-300 overflow-hidden`}>
       <div className="p-4">
         <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="text-white hover:text-gray-300 transition-colors">
-          <FiMenu size={28} />
+          <FiMenu size={24} />
         </button>
       </div>
       
@@ -50,7 +50,7 @@ const Navigation = () => {
             <div className="min-w-[24px]">
               {item.icon}
             </div>
-            <span className={`text-xl whitespace-nowrap transition-opacity ${isSidebarOpen ? 'opacity-100' : 'opacity-0'}`}>
+            <span className={`text-base whitespace-nowrap transition-opacity ${isSidebarOpen ? 'opacity-100' : 'opacity-0'}`}>
               {item.text}
             </span>
           </a>

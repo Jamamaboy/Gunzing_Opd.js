@@ -1,21 +1,17 @@
 import React from 'react';
-import PrimaryBar from "./components/PrimaryBar";
-import SecondaryBar from "./components/SecondaryBar";
-import Sidebar from "./components/Navigation ";
+import { Routes, Route } from 'react-router-dom'
+import Layout from './components/Layout';
 import Content from "./components/Content";
+import CameraPage from './components/Camera';
 
 const App = () => {
   return (
-    <div className="h-screen flex flex-col">
-      <PrimaryBar />
-      <SecondaryBar />
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
-        <div className="flex-1 overflow-auto">
-          <Content />
-        </div>
-      </div>
-    </div>
+    <Routes>
+      <Route element={<Layout />}>
+        <Route path="/" element={<Content />} />
+      </Route>
+      <Route path="/camera" element={<CameraPage />} />
+    </Routes>
   );
 };
 
