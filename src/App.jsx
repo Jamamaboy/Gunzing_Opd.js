@@ -7,17 +7,9 @@ import InformationBar from "./components/InformationBar";
 
 const App = () => {
   return (
-    <div className="h-screen flex flex-col">
-      <PrimaryBar />
-      <SecondaryBar />
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
         <div className="flex-1 overflow-auto">
-          <InformationBar/>
-          <Content />
+            <Content />
         </div>
-      </div>
-    </div>
   );
 };
 

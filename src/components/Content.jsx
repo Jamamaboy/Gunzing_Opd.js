@@ -2,68 +2,40 @@ import { FaShareSquare } from "react-icons/fa";
 
 function Content() {
   return (
-    <div className="p-6 h-[80vh] flex justify-center items-center relative">
-      <div className="flex w-3/4">
-        <img
-          src="https://oyster.ignimgs.com/mediawiki/apis.ign.com/battlefield-3/4/43/G18.png"
-          alt="ปืน"
-          className="w-96 h-60 object-cover rounded-lg shadow"
-        />
-
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="w-full max-w-md p-8 space-y-4 bg-white border border-[#800000] rounded-lg shadow-lg">
+        <h2 className="text-2xl font-semibold text-center text-gray-800">เข้าสู่ระบบ</h2>
         
-        <div className="ml-10 flex-1 flex justify-between items-start">
-          
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-semibold">ปืน-ยี่ห้อ-รุ่น</h1>
-              <FaShareSquare className="text-gray-500 cursor-pointer text-3xl hover:text-gray-700 transition" />
-            </div>
-
-            <div className="mt-6 space-y-2">
-              <p className="text-gray-600 font-semibold text-lg">รายละเอียด</p>
-              <p className="text-gray-700 text-lg">ประเภท: พก</p>
-              <p className="text-gray-700 text-lg">ยี่ห้อ:XXXXXXXX</p>
-              <p className="text-gray-700 text-lg">รุ่น:XXXXXXXXXX</p>
-              <p className="text-gray-700 text-lg">จุดสังเกตเลขประจำปืน:XXXXXXXXXXXXXX</p>
-            </div>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700" htmlFor="username">รหัสประจำตัว</label>
+            <input
+              id="username"
+              type="text"
+              className="w-full px-3 py-2 mt-1 text-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800000]"
+              placeholder="Value"
+            />
           </div>
 
-          
-          <div className="flex flex-col items-center ml-10">
-            <div className="relative w-20 h-20">
-              <svg className="w-full h-full" viewBox="0 0 36 36">
-                <path
-                  className="text-gray-300 stroke-current"
-                  strokeWidth="4"
-                  d="M18 2a16 16 0 1 1 0 32 16 16 0 1 1 0-32"
-                  fill="none"
-                />
-                <path
-                  className="text-red-800 stroke-current"
-                  strokeWidth="4"
-                  strokeDasharray="100"
-                  strokeDashoffset="22"
-                  d="M18 2a16 16 0 1 1 0 32 16 16 0 1 1 0-32"
-                  fill="none"
-                />
-              </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-lg font-semibold">
-                78%
-              </span>
-            </div>
-            <p className="mt-2 text-gray-700 text-lg">ความมั่นใจ</p>
+          <div>
+            <label className="block text-sm font-medium text-gray-700" htmlFor="password">รหัสผ่าน</label>
+            <input
+              id="password"
+              type="password"
+              className="w-full px-3 py-2 mt-1 text-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800000]"
+              placeholder="Value"
+            />
           </div>
         </div>
-      </div>
 
-      
-      <div className="absolute bottom-14 right-8 flex space-x-4">
-        <button className="px-6 py-3 border border-gray-400 text-gray-700 rounded-lg hover:bg-gray-100 transition text-lg w-36">
-          ถ่ายใหม่
+        <button className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#800000] rounded-md hover:bg-red-700 focus:outline-none">
+          ลงชื่อเข้าใช้
         </button>
-        <button className="px-6 py-3 bg-red-800 text-white rounded-lg hover:bg-red-900 transition text-lg w-36">
-          บันทึกประวัติ
-        </button>
+
+        <div className="flex flex-col items-left mt-4 text-sm text-blue-800">
+          <a href="#" className="hover:underline">ลืมรหัสผ่าน ?</a>
+          <a href="#" className="hover:underline">แดชบอร์ด</a>
+        </div>
       </div>
     </div>
   );
