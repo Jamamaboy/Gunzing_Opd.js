@@ -13,7 +13,7 @@ function Content() {
               id="username"
               type="text"
               className="w-full px-3 py-2 mt-1 text-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800000]"
-              placeholder="Value"
+              placeholder="รหัสประจำตัว"
             />
           </div>
 
@@ -23,7 +23,7 @@ function Content() {
               id="password"
               type="password"
               className="w-full px-3 py-2 mt-1 text-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800000]"
-              placeholder="Value"
+              placeholder="รหัสผ่าน"
             />
           </div>
         </div>
@@ -34,7 +34,6 @@ function Content() {
 
         <div className="flex flex-col items-left mt-4 text-sm text-blue-800">
           <a href="#" className="hover:underline">ลืมรหัสผ่าน ?</a>
-          <a href="#" className="hover:underline">แดชบอร์ด</a>
         </div>
       </div>
     </div>
