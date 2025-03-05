@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate-pwa-assets": "pwa-assets-generator --preset minimal public/vite.svg"
   },
   "dependencies": {
     "dbf": "^0.2.0",
@@ -22,12 +23,14 @@
     "react-toastify": "^11.0.2",
     "react-webcam": "^7.2.0",
     "topojson-client": "^3.1.0",
+    "vite-plugin-pwa": "^0.21.1",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
     "@types/react": "^18.3.17",
     "@types/react-dom": "^18.3.5",
+    "@vite-pwa/assets-generator": "^0.2.6",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.17.0",

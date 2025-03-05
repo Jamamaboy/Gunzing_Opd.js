@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, RotateCw, Image as ImageIcon, ArrowLeft } from 'lucide-react';
+import { RotateCw, Image as ImageIcon, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ImagePreview from './ImagePreview';
 
@@ -7,14 +7,13 @@ const CameraPage = () => {
   const navigate = useNavigate();
   const [stream, setStream] = useState(null);
   const [facingMode, setFacingMode] = useState('environment');
-  const [selectedMode, setSelectedMode] = useState('ยาเสพติด');
+  const [selectedMode, setSelectedMode] = useState('อาวุปืน');
   const [capturedImage, setCapturedImage] = useState(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
   const startCamera = async () => {
     try {
-      // Stop any existing streams first
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
       }
@@ -136,16 +135,16 @@ const CameraPage = () => {
             {/* Mode Selection */}
             <div className="flex justify-around py-2 mb-4">
               <button 
-                className={`px-6 py-2 rounded-full text-sm ${selectedMode === 'ยาเสพติด' ? 'bg-white text-black' : 'text-white'}`}
-                onClick={() => setSelectedMode('ยาเสพติด')}
-              >
-                ยาเสพติด
-              </button>
-              <button 
                 className={`px-6 py-2 rounded-full text-sm ${selectedMode === 'อาวุปืน' ? 'bg-white text-black' : 'text-white'}`}
                 onClick={() => setSelectedMode('อาวุปืน')}
               >
                 อาวุปืน
+              </button>
+              <button 
+                className={`px-6 py-2 rounded-full text-sm ${selectedMode === 'ยาเสพติด' ? 'bg-white text-black' : 'text-white'}`}
+                onClick={() => setSelectedMode('ยาเสพติด')}
+              >
+                ยาเสพติด
               </button>
             </div>
 

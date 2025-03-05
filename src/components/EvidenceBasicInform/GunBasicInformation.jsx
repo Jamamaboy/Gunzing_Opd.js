@@ -1,13 +1,22 @@
 import React from 'react';
 
-const GunBasicInformation = () => {
-  const gunData = {
-    type: 'ปืน',
-    brand: 'Glock',
-    model: '',
-    serialNumber: '',
-    confidence: 78
+const GunBasicInformation = ({ analysisResult }) => {
+  // Default data if no analysis result is provided
+  const gunData = analysisResult ? {
+    type: analysisResult.weaponType || 'Unknown',
+    detected: analysisResult.detected || false,
+    confidence: analysisResult.confidence 
+      ? Math.round(analysisResult.confidence * 100) 
+      : 65
+  } : {
+    type: 'Unknown',
+    detected: false,
+    confidence: 65
   };
+
+  // Get the image from localStorage if available
+  const imageUrl = localStorage.getItem('analysisImage') || 
+    "https://via.placeholder.com/400x300?text=No+Image";
 
   const calculateOffset = (percent) => {
     const circumference = 2 * Math.PI * 45;
@@ -20,8 +29,8 @@ const GunBasicInformation = () => {
       {/* Left column - Gun image */}
       <div className="w-1/2 p-6 flex justify-center items-center">
         <img 
-          src="https://oyster.ignimgs.com/mediawiki/apis.ign.com/battlefield-3/4/43/G18.png" 
-          alt="ปืน Glock" 
+          src={imageUrl} 
+          alt="อาวุธปืน" 
           className="max-w-full h-auto object-contain max-h-96"
         />
       </div>
@@ -31,7 +40,7 @@ const GunBasicInformation = () => {
         {/* Top section with title and share button */}
         <div>
           <div className="flex justify-between items-center border-b pb-4 mb-6">
-            <h2 className="text-2xl font-medium">ปืน-ยี่ห้อ-รุ่น</h2>
+            <h2 className="text-2xl font-medium">{gunData.type}</h2>
             <button className="text-gray-600">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -50,17 +59,24 @@ const GunBasicInformation = () => {
                   <span>{gunData.type}</span>
                 </div>
                 <div className="flex">
-                  <span className="text-gray-600 w-40">ยี่ห้อ:</span> 
-                  <span>{gunData.brand}</span>
+                  <span className="text-gray-600 w-40">สถานะ:</span> 
+                  <span>{gunData.detected ? 'ตรวจพบ' : 'ไม่พบ'}</span>
                 </div>
-                <div className="flex">
-                  <span className="text-gray-600 w-40">รุ่น:</span> 
-                  <span>{gunData.model || '-'}</span>
-                </div>
-                <div className="flex">
-                  <span className="text-gray-600 w-40">เลขทะเบียนประจำปืน:</span> 
-                  <span>{gunData.serialNumber || '-'}</span>
-                </div>
+                
+                {/* Additional details if available from analysis */}
+                {analysisResult && analysisResult.detections && analysisResult.detections.length > 0 && (
+                  <div className="mt-6">
+                    <h4 className="font-medium mb-2">ผลการวิเคราะห์เพิ่มเติม:</h4>
+                    <ul className="space-y-2">
+                      {analysisResult.detections.slice(0, 3).map((detection, index) => (
+                        <li key={index} className="flex">
+                          <span className="text-gray-600 w-40">{detection.class}:</span>
+                          <span>{(detection.confidence * 100).toFixed(1)}%</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
               
               {/* Confidence meter on the right */}
@@ -120,21 +136,21 @@ const GunBasicInformation = () => {
     </div>
   );
 
-  // Mobile version - Updated to match the second design image
+  // Mobile version
   const MobileView = () => (
     <div className="flex md:hidden flex-col h-full w-full">
       {/* Gun image */}
       <div className="p-4 flex justify-center items-center">
         <img 
-          src="https://oyster.ignimgs.com/mediawiki/apis.ign.com/battlefield-3/4/43/G18.png" 
-          alt="ปืน Glock" 
+          src={imageUrl} 
+          alt="อาวุธปืน" 
           className="max-w-full h-auto object-contain max-h-60"
         />
       </div>
 
       {/* Gun title with share button */}
       <div className="flex justify-between items-center p-4 border-b">
-        <h2 className="text-xl font-medium">ปืน-ยี่ห้อ-รุ่น</h2>
+        <h2 className="text-xl font-medium">อาวุธปืน {gunData.type}</h2>
         <button className="text-gray-600">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -153,17 +169,24 @@ const GunBasicInformation = () => {
               <span className="font-medium">{gunData.type}</span>
             </div>
             <div className="py-2 flex">
-              <span className="text-gray-600 w-32">ยี่ห้อ:</span> 
-              <span className="font-medium">{gunData.brand}</span>
+              <span className="text-gray-600 w-32">สถานะ:</span> 
+              <span className="font-medium">{gunData.detected ? 'ตรวจพบ' : 'ไม่พบ'}</span>
             </div>
-            <div className="py-2 flex">
-              <span className="text-gray-600 w-32">รุ่น:</span> 
-              <span className="font-medium">{gunData.model || '-'}</span>
-            </div>
-            <div className="py-2 flex">
-              <span className="text-gray-600 w-32">จุดสังเกตเลขทะเบียน:</span> 
-              <span className="font-medium">{gunData.serialNumber || '-'}</span>
-            </div>
+            
+            {/* Additional details if available from analysis */}
+            {analysisResult && analysisResult.detections && analysisResult.detections.length > 0 && (
+              <div className="mt-4">
+                <h4 className="font-medium">ผลการวิเคราะห์เพิ่มเติม:</h4>
+                <ul>
+                  {analysisResult.detections.slice(0, 2).map((detection, index) => (
+                    <li key={index} className="py-2 flex">
+                      <span className="text-gray-600 w-32">{detection.class}:</span>
+                      <span className="font-medium">{(detection.confidence * 100).toFixed(1)}%</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
           
           {/* Confidence meter on right */}

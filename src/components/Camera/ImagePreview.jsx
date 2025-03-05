@@ -33,7 +33,7 @@ const ImagePreview = ({ imageData, mode, onRetake, onClose }) => {
       formData.append('mode', mode); // Send mode (ยาเสพติด or อาวุปืน)
       
       // Send to backend API
-      const response = await fetch('http://localhost:8000/api/analyze', {
+      const response = await fetch('https://e15a-203-131-213-42.ngrok-free.app/api/analyze', {
         method: 'POST',
         body: formData,
       });
@@ -44,15 +44,18 @@ const ImagePreview = ({ imageData, mode, onRetake, onClose }) => {
       
       const result = await response.json();
       
+      // Normalize result format between drug and weapon models
+      const normalizedResult = normalizeResult(result, mode);
+      
       // Store result in localStorage (or you could use context/redux)
-      localStorage.setItem('analysisResult', JSON.stringify(result));
+      localStorage.setItem('analysisResult', JSON.stringify(normalizedResult));
       localStorage.setItem('analysisImage', imageData);
       
       // Navigate to the evidence page with the appropriate type
       if (mode === 'ยาเสพติด') {
-        navigate('/evidenceBasicInform', { state: { type: 'Drug', result } });
+        navigate('/evidenceBasicInform', { state: { type: 'Drug', result: normalizedResult } });
       } else if (mode === 'อาวุปืน') {
-        navigate('/evidenceBasicInform', { state: { type: 'Gun', result } });
+        navigate('/evidenceBasicInform', { state: { type: 'Gun', result: normalizedResult } });
       }
       
     } catch (err) {
@@ -60,6 +63,24 @@ const ImagePreview = ({ imageData, mode, onRetake, onClose }) => {
       setError(err.message || 'Failed to process image');
       setIsProcessing(false);
     }
+  };
+  
+  // Function to normalize result format between different models
+  const normalizeResult = (result, mode) => {
+    if (mode === 'ยาเสพติด') {
+      // Drug model result format is already as expected
+      return result;
+    } else if (mode === 'อาวุปืน') {
+      // Transform weapon detection results to a consistent format
+      return {
+        detected: result.detected,
+        confidence: result.confidence,
+        weaponType: result.weaponType,
+        detections: result.detections,
+        // Add any other fields needed by GunBasicInformation component
+      };
+    }
+    return result;
   };
 
   // Mobile Version

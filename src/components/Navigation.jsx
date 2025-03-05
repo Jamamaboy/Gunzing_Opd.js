@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { FiMenu, FiHome, FiCamera, FiClock, FiMap, FiMoreHorizontal, FiDownload, FiFolder, FiBarChart2 } from 'react-icons/fi';
-import { useNavigate, useLocation } from 'react-router-dom'; // Assuming you're using React Router
+import { FiMenu, FiMoreHorizontal } from 'react-icons/fi';
+import { FaHome, FaCamera, FaHistory, FaUpload } from "react-icons/fa";
+import { FaFolderOpen, FaChartSimple, FaMapLocationDot  } from "react-icons/fa6";
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const Navigation = () => {
   const navigate = useNavigate();
@@ -36,20 +38,20 @@ const Navigation = () => {
   }, [isMoreMenuOpen]);
 
   const menuItems = [
-    { id: 'home', icon: <FiHome size={24} />, text: "หน้าหลัก", path: "/", showInBottom: true },
-    { id: 'camera', icon: <FiCamera size={24} />, text: "ถ่ายภาพ", path: "/camera", showInBottom: true, isSpecial: true },
-    { id: 'upload', icon: <FiDownload size={24} />, text: "อัพโหลดภาพ", path: "/upload", showInBottom: false },
-    { id: 'history', icon: <FiClock size={24} />, text: "ประวัติการพบ", path: "/history", showInBottom: true },
-    { id: 'folder', icon: <FiFolder size={24} />, text: "บัญชีวัตถุพยาน", path: "/folder", showInBottom: false },
-    { id: 'stats', icon: <FiBarChart2 size={24} />, text: "สถิติ", path: "/stats", showInBottom: false },
-    { id: 'map', icon: <FiMap size={24} />, text: "แผนที่", path: "/map", showInBottom: true },
+    { id: 'home', icon: <FaHome size={24} />, text: "หน้าหลัก", path: "/", showInBottom: true },
+    { id: 'camera', icon: <FaCamera size={24} />, text: "ถ่ายภาพ", path: "/camera", showInBottom: true, isSpecial: true },
+    { id: 'upload', icon: <FaUpload size={24} />, text: "อัพโหลดภาพ", path: "/upload", showInBottom: false },
+    { id: 'history', icon: <FaHistory size={24} />, text: "ประวัติ", path: "/history", showInBottom: true },
+    { id: 'folder', icon: <FaFolderOpen size={24} />, text: "บัญชีวัตถุพยาน", path: "/folder", showInBottom: false },
+    { id: 'stats', icon: <FaChartSimple size={24} />, text: "สถิติ", path: "/stats", showInBottom: false },
+    { id: 'map', icon: <FaMapLocationDot size={24} />, text: "แผนที่", path: "/map", showInBottom: true },
   ];
 
   const bottomNavItems = menuItems.filter(item => item.showInBottom);
   const moreMenuItems = menuItems.filter(item => !item.showInBottom);
   
   const handleNavClick = (e, path, id) => {
-    e.stopPropagation(); // Prevent event bubbling
+    e.stopPropagation();
     setActiveTab(id);
     navigate(path);
     setMoreMenuOpen(false);
@@ -75,7 +77,7 @@ const Navigation = () => {
           </button>
         </div>
         
-        <nav className="flex-1 space-y-1 overflow-y-auto">
+        <nav className="flex-1 space-y-1">
           {menuItems.map((item) => (
             <div key={item.id} className="relative">
               {activeTab === item.id && (
@@ -119,7 +121,7 @@ const Navigation = () => {
         <div className="relative h-16 px-6">
           <div className="flex justify-between items-center h-full">
             {/* Left Items */}
-            <div className="flex space-x-6">
+            <div className="flex space-x-9">
               {leftItems.map((item) => (
                 <button
                   key={item.id}
@@ -149,7 +151,7 @@ const Navigation = () => {
                   hover:scale-110
                   relative
                 ">
-                  <FiCamera size={24} className="text-white" />
+                  <FaCamera size={24} className="text-white" />
                 </div>
               </button>
             )}

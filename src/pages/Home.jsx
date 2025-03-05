@@ -1,6 +1,8 @@
 import { useState, memo } from "react";
 import { Link } from "react-router-dom";
-import { Camera, Upload, Clock, FolderClosed, BarChart3, MapPin } from "lucide-react";
+import { FaCamera, FaHistory, FaUpload } from "react-icons/fa";
+import { ImUpload } from "react-icons/im";
+import { FaFolderOpen, FaChartSimple, FaMapLocationDot  } from "react-icons/fa6";
 
 // Memoized Feature Button Component
 const FeatureButton = memo(({ Icon, label }) => (
@@ -45,10 +47,10 @@ const Home = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const features = [
-    { Icon: Clock, label: "ประวัติการพบวัตถุพยาน" },
-    { Icon: FolderClosed, label: "บัญชีวัตถุพยาน" },
-    { Icon: BarChart3, label: "สถิติ" },
-    { Icon: MapPin, label: "แผนที่" }
+    { Icon: FaHistory, label: "ประวัติการพบวัตถุพยาน" },
+    { Icon: FaFolderOpen, label: "บัญชีวัตถุพยาน" },
+    { Icon: FaChartSimple, label: "สถิติ" },
+    { Icon: FaMapLocationDot, label: "แผนที่" }
   ];
 
   const uploadOptions = [
@@ -80,7 +82,7 @@ const Home = () => {
             <div className="flex w-full gap-4 justify-center">
               {/* ถ่ายภาพ */}
               <Link to="/camera" className="w-40 min-w-[140px] bg-red-800 text-white py-3 px-4 rounded-md flex items-center justify-center gap-2 transition-colors hover:bg-red-900">
-                <Camera className="w-5 h-5" />
+                <FaCamera className="w-5 h-5" />
                 <span>ถ่ายภาพ</span>
               </Link>
 
@@ -90,7 +92,7 @@ const Home = () => {
                   className="w-full border border-red-800 text-red-800 py-3 px-4 rounded-md flex items-center justify-center gap-2 transition-colors hover:bg-red-50"
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                 >
-                  <Upload className="w-5 h-5" />
+                  <FaUpload className="w-5 h-5" />
                   <span>อัพโหลดภาพ</span>
                 </button>
 
@@ -125,7 +127,7 @@ const Home = () => {
           
           <div className="flex justify-center gap-4 mb-12">
             <Link to="/camera" className="bg-red-800 hover:bg-red-900 text-white px-6 py-3 rounded-md flex items-center w-40 gap-2 justify-center transition-colors">
-              <Camera size={20} /> ถ่ายภาพ
+              <FaCamera size={20} /> ถ่ายภาพ
             </Link>
 
             <div className="relative">
@@ -133,7 +135,7 @@ const Home = () => {
                 className="bg-white border border-red-800 text-red-800 px-6 py-3 rounded-md flex items-center gap-2 justify-center transition-colors hover:bg-red-50" 
                 onClick={() => setDropdownOpen(!dropdownOpen)}
               >
-                <Upload size={20} /> อัปโหลดภาพ
+                <FaUpload size={20} /> อัปโหลดภาพ
               </button>
               
               {dropdownOpen && (
