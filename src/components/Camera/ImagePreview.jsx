@@ -33,7 +33,7 @@ const ImagePreview = ({ imageData, mode, onRetake, onClose }) => {
       formData.append('mode', mode); // Send mode (ยาเสพติด or อาวุปืน)
       
       // Send to backend API
-      const response = await fetch('https://e15a-203-131-213-42.ngrok-free.app/api/analyze', {
+      const response = await fetch('http://0.0.0.0:8000/api/analyze', {
         method: 'POST',
         body: formData,
       });

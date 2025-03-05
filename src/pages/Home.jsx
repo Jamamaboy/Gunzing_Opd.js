@@ -1,8 +1,9 @@
 import { useState, memo } from "react";
 import { Link } from "react-router-dom";
 import { FaCamera, FaHistory, FaUpload } from "react-icons/fa";
-import { ImUpload } from "react-icons/im";
 import { FaFolderOpen, FaChartSimple, FaMapLocationDot  } from "react-icons/fa6";
+import ImagePreview from '../components/Camera/ImagePreview';
+import { useNavigate } from 'react-router-dom';
 
 // Memoized Feature Button Component
 const FeatureButton = memo(({ Icon, label }) => (
@@ -44,7 +45,10 @@ const UploadDropdown = memo(({ isOpen, options, onOptionClick }) => {
 });
 
 const Home = () => {
+  const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [selectedMode, setSelectedMode] = useState(null);
+  const [uploadedImage, setUploadedImage] = useState(null);
 
   const features = [
     { Icon: FaHistory, label: "ประวัติการพบวัตถุพยาน" },
@@ -54,14 +58,54 @@ const Home = () => {
   ];
 
   const uploadOptions = [
-    { label: "ปืน" },
-    { label: "ยาเสพติด" }
+    { label: "ปืน", mode: 'อาวุปืน' },
+    { label: "ยาเสพติด", mode: 'ยาเสพติด' }
   ];
 
-  const handleOptionClick = (option) => {
-    console.log(`Selected: ${option.label}`);
-    setDropdownOpen(false);
+  const handleFileUpload = (file, mode) => {
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setUploadedImage(event.target.result);
+        setSelectedMode(mode);
+        setDropdownOpen(false);
+      };
+      reader.readAsDataURL(file);
+    }
   };
+
+  const handleOptionClick = (option) => {
+    // Create file input element
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    
+    // Set onchange event to handle file selection
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      handleFileUpload(file, option.mode);
+    };
+    
+    // Trigger file selection dialog
+    input.click();
+  };
+
+  const handleImagePreviewClose = () => {
+    setUploadedImage(null);
+    setSelectedMode(null);
+  };
+
+  // If an image is uploaded, show ImagePreview
+  if (uploadedImage && selectedMode) {
+    return (
+      <ImagePreview 
+        imageData={uploadedImage}
+        mode={selectedMode}
+        onRetake={handleImagePreviewClose}
+        onClose={handleImagePreviewClose}
+      />
+    );
+  }
 
   return (
     <div className="h-full bg-gray-50">
@@ -96,11 +140,19 @@ const Home = () => {
                   <span>อัพโหลดภาพ</span>
                 </button>
 
-                <UploadDropdown 
-                  isOpen={dropdownOpen} 
-                  options={uploadOptions} 
-                  onOptionClick={handleOptionClick} 
-                />
+                {dropdownOpen && (
+                  <div className="absolute left-0 right-0 mt-1 bg-white shadow-lg rounded-md overflow-hidden border border-gray-200 z-50">
+                    {uploadOptions.map((option, index) => (
+                      <button 
+                        key={index} 
+                        className="block w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                        onClick={() => handleOptionClick(option)}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>

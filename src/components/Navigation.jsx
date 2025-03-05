@@ -3,6 +3,7 @@ import { FiMenu, FiMoreHorizontal } from 'react-icons/fi';
 import { FaHome, FaCamera, FaHistory, FaUpload } from "react-icons/fa";
 import { FaFolderOpen, FaChartSimple, FaMapLocationDot  } from "react-icons/fa6";
 import { useNavigate, useLocation } from 'react-router-dom';
+import ImagePreview from '../components/Camera/ImagePreview'; // Import ImagePreview component
 
 const Navigation = () => {
   const navigate = useNavigate();
@@ -10,6 +11,9 @@ const Navigation = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isMoreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [isUploadDropdownOpen, setUploadDropdownOpen] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState(null);
+  const [selectedMode, setSelectedMode] = useState(null);
   
   // Set active tab based on current path
   const [activeTab, setActiveTab] = useState(() => {
@@ -32,15 +36,30 @@ const Navigation = () => {
 
   // Close more menu when clicking outside
   useEffect(() => {
-    const handleClickOutside = () => isMoreMenuOpen && setMoreMenuOpen(false);
+    const handleClickOutside = () => {
+      if (isMoreMenuOpen) setMoreMenuOpen(false);
+      if (isUploadDropdownOpen) setUploadDropdownOpen(false);
+    };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
-  }, [isMoreMenuOpen]);
+  }, [isMoreMenuOpen, isUploadDropdownOpen]);
+
+  const uploadOptions = [
+    { label: "ปืน", mode: 'อาวุปืน' },
+    { label: "ยาเสพติด", mode: 'ยาเสพติด' }
+  ];
 
   const menuItems = [
     { id: 'home', icon: <FaHome size={24} />, text: "หน้าหลัก", path: "/", showInBottom: true },
     { id: 'camera', icon: <FaCamera size={24} />, text: "ถ่ายภาพ", path: "/camera", showInBottom: true, isSpecial: true },
-    { id: 'upload', icon: <FaUpload size={24} />, text: "อัพโหลดภาพ", path: "/upload", showInBottom: false },
+    { 
+      id: 'upload', 
+      icon: <FaUpload size={24} />, 
+      text: "อัพโหลดภาพ", 
+      path: "/upload", 
+      showInBottom: false,
+      hasDropdown: true 
+    },
     { id: 'history', icon: <FaHistory size={24} />, text: "ประวัติ", path: "/history", showInBottom: true },
     { id: 'folder', icon: <FaFolderOpen size={24} />, text: "บัญชีวัตถุพยาน", path: "/folder", showInBottom: false },
     { id: 'stats', icon: <FaChartSimple size={24} />, text: "สถิติ", path: "/stats", showInBottom: false },
@@ -55,7 +74,53 @@ const Navigation = () => {
     setActiveTab(id);
     navigate(path);
     setMoreMenuOpen(false);
+    setUploadDropdownOpen(false);
   };
+
+  const handleFileUpload = (file, mode) => {
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setUploadedImage(event.target.result);
+        setSelectedMode(mode);
+        setUploadDropdownOpen(false);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleOptionClick = (option) => {
+    // Create file input element
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    
+    // Set onchange event to handle file selection
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      handleFileUpload(file, option.mode);
+    };
+    
+    // Trigger file selection dialog
+    input.click();
+  };
+
+  const handleImagePreviewClose = () => {
+    setUploadedImage(null);
+    setSelectedMode(null);
+  };
+
+  // If an image is uploaded, show ImagePreview
+  if (uploadedImage && selectedMode) {
+    return (
+      <ImagePreview 
+        imageData={uploadedImage}
+        mode={selectedMode}
+        onRetake={handleImagePreviewClose}
+        onClose={handleImagePreviewClose}
+      />
+    );
+  }
 
   const Sidebar = () => (
     <div className="h-full">      
@@ -77,18 +142,26 @@ const Navigation = () => {
           </button>
         </div>
         
-        <nav className="flex-1 space-y-1">
+        <nav className="flex-1 space-y-1 relative">
           {menuItems.map((item) => (
             <div key={item.id} className="relative">
               {activeTab === item.id && (
                 <div className="absolute left-0 top-0 w-2 h-full bg-[#990000]" />
               )}
               <button
-                onClick={(e) => handleNavClick(e, item.path, item.id)}
+                onClick={(e) => {
+                  if (item.id === 'upload') {
+                    e.stopPropagation();
+                    setUploadDropdownOpen(!isUploadDropdownOpen);
+                  } else {
+                    handleNavClick(e, item.path, item.id);
+                  }
+                }}
                 className={`
                   flex items-center space-x-6 px-4 py-4 w-full text-left
                   hover:bg-[#444444] transition-all
                   ${activeTab === item.id ? 'bg-[#444444]' : ''}
+                  ${item.id === 'upload' && isUploadDropdownOpen ? 'bg-[#444444]' : ''}
                 `}
               >
                 <div className="min-w-[24px]">
@@ -98,6 +171,38 @@ const Navigation = () => {
                   {item.text}
                 </span>
               </button>
+  
+              {/* Upload Dropdown for Sidebar */}
+              {item.id === 'upload' && isUploadDropdownOpen && isSidebarOpen && (
+                <div 
+                  className={`
+                    absolute left-0 right-0 z-10
+                    bg-[#333333] border-t border-gray-700
+                    transition-all duration-300 ease-in-out
+                  `}
+                  style={{ 
+                    position: 'absolute', 
+                    top: '100%'
+                  }}
+                >
+                  {uploadOptions.map((option, index) => (
+                    <button
+                      key={index}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOptionClick(option);
+                      }}
+                      className={`
+                        flex items-center space-x-3 px-6 py-3 w-full text-left
+                        hover:bg-[#444444]
+                        text-gray-400 hover:text-white
+                      `}
+                    >
+                      <span className="text-sm font-medium">{option.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </nav>
