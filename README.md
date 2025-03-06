@@ -11,9 +11,10 @@
    ![image](https://github.com/user-attachments/assets/3bdf81fc-9b2e-41f2-acad-a4f709111cb3)
 
 2. Primary Bar: แสดงโลโก้ของเว็บไซต์ ซึ่งเป็น Access Point ที่สามารถเข้าถึงหน้าหลักได้
+   
    ![image](https://github.com/user-attachments/assets/6415b070-a42c-4e1b-afe4-da92bcf2ed24)
 
-3. Sidebar: ประกอบด้วยเมนูที่ใช้เปลี่ยนเส้นทางไปหน้าต่าง ๆ ดังนี้
+4. Sidebar: ประกอบด้วยเมนูที่ใช้เปลี่ยนเส้นทางไปหน้าต่าง ๆ ดังนี้
    - ปุ่ม Home เปลี่ยนเส้นทางไปยังหน้า Home
    - ปุ่มถ่ายภาพเพื่อเปลี่ยนเส้นทางไปยังหน้า Camera
    - ปุ่มอัพโหลดภาพกดแล้วมีเมนูให้เลือกว่าจะอัพโหลดรูปปืน หรือรูปยาเสพติด
@@ -21,7 +22,7 @@
      
    ![image](https://github.com/user-attachments/assets/1830a976-d2ce-45af-b87d-e58fdcc99013) ![image](https://github.com/user-attachments/assets/8175abb6-811a-46fa-9699-32062811552d) ![image](https://github.com/user-attachments/assets/24f8aa76-0350-4c84-a90a-f21218df4194)
 
-4. Camera
+5. Camera
    - ปุ่มเลือกโหมดว่าจะถ่ายวัตถุพยานประเภท อาวุธปืน หรือยาเสพติด
    - ปุ่มชัตเตอร์ใช้ถ่ายรูป
    - ปุ่มแกลเลอรี่ใช้เลือกรูปในที่อยากอัพโหลด
@@ -29,7 +30,7 @@
    - ปุ่มย้อนกลับเพื่อกลับไปยังหน้า Home
    ![image](https://github.com/user-attachments/assets/503dc5d7-2f96-4337-949e-4dcc5c213cfd)
 
-5. Image Preview
+6. Image Preview
    - พรีวิวภาพที่ผู้ใช้ถ่ายหรืออัพโหลด
    - ปุ่มถ่ายภาพใหม่/อัพโหลดภาพใหม่
    - ปุ่มย้อนกลับไป Home หรือหน้า Camera
