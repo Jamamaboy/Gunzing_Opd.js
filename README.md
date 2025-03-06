@@ -1,4 +1,4 @@
-Version 0.1.0
+![image](https://github.com/user-attachments/assets/fc8839a1-bcb7-43ad-a237-9676c96c6b83)Version 0.1.0
 
 ฟีเจอร์
 
@@ -7,14 +7,18 @@ Version 0.1.0
    - มีคำอธิบายหน้าเว็บ
    - ปุ่มถ่ายภาพเพื่อเปลี่ยนเส้นทางไปยังหน้า Camera
    - ปุ่มอัพโหลดภาพกดแล้วมีเมนูให้เลือกว่าจะอัพโหลดรูปปืน หรือรูปยาเสพติด
-![image](https://github.com/user-attachments/assets/3bdf81fc-9b2e-41f2-acad-a4f709111cb3)
+   ![image](https://github.com/user-attachments/assets/3bdf81fc-9b2e-41f2-acad-a4f709111cb3)
 
 2. Primary Bar: แสดงโลโก้ของเว็บไซต์ ซึ่งเป็น Access Point ที่สามารถเข้าถึงหน้าหลักได้
+   ![image](https://github.com/user-attachments/assets/6415b070-a42c-4e1b-afe4-da92bcf2ed24)
+
 3. Sidebar: ประกอบด้วยเมนูที่ใช้เปลี่ยนเส้นทางไปหน้าต่าง ๆ ดังนี้
    - ปุ่ม Home เปลี่ยนเส้นทางไปยังหน้า Home
    - ปุ่มถ่ายภาพเพื่อเปลี่ยนเส้นทางไปยังหน้า Camera
    - ปุ่มอัพโหลดภาพกดแล้วมีเมนูให้เลือกว่าจะอัพโหลดรูปปืน หรือรูปยาเสพติด
    - Sidebar สามารถย่อและขยายได้
+   ![image](https://github.com/user-attachments/assets/1830a976-d2ce-45af-b87d-e58fdcc99013) ![image](https://github.com/user-attachments/assets/8175abb6-811a-46fa-9699-32062811552d) ![image](https://github.com/user-attachments/assets/24f8aa76-0350-4c84-a90a-f21218df4194)
+
 4. Camera
    - ปุ่มเลือกโหมดว่าจะถ่ายวัตถุพยานประเภท อาวุธปืน หรือยาเสพติด
    - ปุ่มชัตเตอร์ใช้ถ่ายรูป
