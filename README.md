@@ -45,14 +45,14 @@ Version 0.1.0
 
 
 2. Primary Bar: แสดงโลโก้ของเว็บไซต์ ซึ่งเป็น Access Point ที่สามารถเข้าถึงหน้าหลักได้
-   ![image](https://github.com/user-attachments/assets/80cf55de-a4dd-47a3-8d8b-9ea7010eae7b)
+   - ![image](https://github.com/user-attachments/assets/80cf55de-a4dd-47a3-8d8b-9ea7010eae7b)
    
 
 4. Bottombar: ประกอบด้วยเมนูที่ใช้เปลี่ยนเส้นทางไปหน้าต่าง ๆ ดังนี้
    - ปุ่ม Home เปลี่ยนเส้นทางไปยังหน้า Home
    - ปุ่มถ่ายภาพเพื่อเปลี่ยนเส้นทางไปยังหน้า Camera
    - ปุ่มอัพโหลดภาพกดแล้วมีเมนูให้เลือกว่าจะอัพโหลดรูปปืน หรือรูปยาเสพติด
-   ![image](https://github.com/user-attachments/assets/33c5a8fb-006a-43f2-8c1b-db62d820caa1)
+   - ![image](https://github.com/user-attachments/assets/33c5a8fb-006a-43f2-8c1b-db62d820caa1)
 
 
 5. Camera
@@ -61,7 +61,7 @@ Version 0.1.0
    - ปุ่มแกลเลอรี่ใช้เลือกรูปในที่อยากอัพโหลด
    - ปุ่มกลับกล้องสำหรับสลับกล้องหน้ากับกล้องหลัง
    - ปุ่มย้อนกลับเพื่อกลับไปยังหน้า Home
-   ![image](https://github.com/user-attachments/assets/909cc428-4c5f-4e1f-9e9b-83deb9c55cbd)
+   - ![image](https://github.com/user-attachments/assets/909cc428-4c5f-4e1f-9e9b-83deb9c55cbd)
 
 
 6. Image Preview
@@ -69,6 +69,6 @@ Version 0.1.0
    - ปุ่มถ่ายภาพใหม่/อัพโหลดภาพใหม่
    - ปุ่มย้อนกลับไป Home หรือหน้า Camera
    - มีป้ายระบุว่ากำลังอัพโหลด หรือถ่ายภาพในโหมด อาวุธปืน หรือยาเสพติด
-   ![image](https://github.com/user-attachments/assets/d5aba185-5ecd-4e47-aeb3-b6821637562b)
+   - ![image](https://github.com/user-attachments/assets/d5aba185-5ecd-4e47-aeb3-b6821637562b)
 
 
