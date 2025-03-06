@@ -40,7 +40,8 @@ Version 0.1.0
    - มีคำอธิบายหน้าเว็บ
    - ปุ่มถ่ายภาพเพื่อเปลี่ยนเส้นทางไปยังหน้า Camera
    - ปุ่มอัพโหลดภาพกดแล้วมีเมนูให้เลือกว่าจะอัพโหลดรูปปืน หรือรูปยาเสพติด
-   ![image](https://github.com/user-attachments/assets/2dbceaaf-1477-468e-a817-6057c981182c)
+  
+     ![image](https://github.com/user-attachments/assets/2dbceaaf-1477-468e-a817-6057c981182c)
 
 
 2. Primary Bar: แสดงโลโก้ของเว็บไซต์ ซึ่งเป็น Access Point ที่สามารถเข้าถึงหน้าหลักได้
