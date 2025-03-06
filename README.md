@@ -17,6 +17,7 @@
    - ปุ่มถ่ายภาพเพื่อเปลี่ยนเส้นทางไปยังหน้า Camera
    - ปุ่มอัพโหลดภาพกดแล้วมีเมนูให้เลือกว่าจะอัพโหลดรูปปืน หรือรูปยาเสพติด
    - Sidebar สามารถย่อและขยายได้
+     
    ![image](https://github.com/user-attachments/assets/1830a976-d2ce-45af-b87d-e58fdcc99013) ![image](https://github.com/user-attachments/assets/8175abb6-811a-46fa-9699-32062811552d) ![image](https://github.com/user-attachments/assets/24f8aa76-0350-4c84-a90a-f21218df4194)
 
 4. Camera
