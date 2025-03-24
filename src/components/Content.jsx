@@ -1,43 +1,33 @@
-import { FaShareSquare } from "react-icons/fa";
+import { FaGun } from "react-icons/fa6";
+import { GiPill } from "react-icons/gi";
 
-function Content() {
+export default function Content() {
+  const items = [
+    { id: 1, icon: <FaGun size={40} className="text-red-800" />, label: "อาวุธปืน" },
+    { id: 2, icon: <GiPill size={40} className="text-red-800" />, label: "ยาเสพติด" },
+  ];
+
+  const handleClick = (label) => {
+    alert(`คุณเลือก: ${label}`);
+  };
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="w-full max-w-md p-8 space-y-4 bg-white border border-[#800000] rounded-lg shadow-lg">
-        <h2 className="text-2xl font-semibold text-center text-gray-800">เข้าสู่ระบบ</h2>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700" htmlFor="username">รหัสประจำตัว</label>
-            <input
-              id="username"
-              type="text"
-              className="w-full px-3 py-2 mt-1 text-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800000]"
-              placeholder="รหัสประจำตัว"
-            />
+    <div className="flex flex-col items-center justify-center h-screen gap-6 p-4 overflow-hidden">
+      <h1 className="text-xl font-bold">รายการวัตถุพยาน</h1>
+      <div className="flex flex-col items-center gap-6">
+        {items.map((item) => (
+          <div
+            key={item.id}
+            onClick={() => handleClick(item.label)}
+            className="w-40 h-40 flex items-center justify-center border border-red-800 cursor-pointer hover:shadow-2xl transition duration-300 ease-in-out rounded-lg"
+          >
+            <div className="flex flex-col items-center justify-center gap-2 p-4">
+              {item.icon}
+              <span className="text-red-800 font-medium">{item.label}</span>
+            </div>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700" htmlFor="password">รหัสผ่าน</label>
-            <input
-              id="password"
-              type="password"
-              className="w-full px-3 py-2 mt-1 text-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800000]"
-              placeholder="รหัสผ่าน"
-            />
-          </div>
-        </div>
-
-        <button className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#800000] rounded-md hover:bg-red-700 focus:outline-none">
-          ลงชื่อเข้าใช้
-        </button>
-
-        <div className="flex flex-col items-left mt-4 text-sm text-blue-800">
-          <a href="#" className="hover:underline">ลืมรหัสผ่าน ?</a>
-        </div>
+        ))}
       </div>
     </div>
   );
 }
-
-export default Content;
