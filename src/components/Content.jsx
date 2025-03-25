@@ -4,10 +4,6 @@ export default function Content() {
     { id: 2, image: "/images/drugLogo.png", label: "ยาเสพติด" },
   ];
 
-  const handleClick = (label) => {
-    alert(`คุณเลือก: ${label}`);
-  };
-
   return (
     <div className="flex flex-col items-center h-screen mt-20">
       <h1 className="text-xl font-bold">รายการวัตถุพยาน</h1>
