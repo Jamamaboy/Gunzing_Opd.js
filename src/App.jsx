@@ -12,7 +12,7 @@ const App = () => {
       <SecondaryBar />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
-        <div className="flex-1 h-screen overflow-auto">
+        <div className="flex-1 h-full overflow-auto">
           <Content />
         </div>
       </div>

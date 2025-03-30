@@ -1,25 +1,71 @@
-export default function Content() {
-  const items = [
-    { id: 1, image: "/images/gunLogo.png", label: "อาวุธปืน" },
-    { id: 2, image: "/images/drugLogo.png", label: "ยาเสพติด" },
-  ];
+import { useState } from "react";
+import { FaShareSquare } from "react-icons/fa";
+
+const allCalibers = ["9 มม.", "38", "39", "40", "41"];
+
+const gunData = [
+  { 
+    id: 1, 
+    brand: "CZ", 
+    model: "75 COMPACT", 
+    type: "ปืนพก", 
+    calibers: ["39"],
+    images: ["/images/gun1.png", "/images/gun2.png"]
+  }
+];
+
+export default function GunDetail() {
+  const [selectedGun, setSelectedGun] = useState(gunData[0]);
+  const [selectedImage, setSelectedImage] = useState(selectedGun.images[0]);
 
   return (
-    <div className="flex flex-col items-center h-screen mt-20">
-      <h1 className="text-xl font-bold">รายการวัตถุพยาน</h1>
-      <div className="flex flex-col items-center gap-6 mt-6">
-        {items.map((item) => (
-          <div
-            key={item.id}
-            onClick={() => handleClick(item.label)}
-            className="w-40 h-40 flex items-center justify-center border border-red-800 cursor-pointer hover:shadow-2xl transition duration-300 ease-in-out rounded-lg"
-          >
-            <div className="flex flex-col items-center justify-center gap-2 p-4">
-              <img src={item.image} alt={item.label} className="w-16 h-16 object-contain" />
-              <span className="text-red-800 font-medium">{item.label}</span>
-            </div>
-          </div>
-        ))}
+    <div className="relative flex flex-col md:flex-row items-center p-6 bg-white h-full">
+      {/* Half Circle Background */}
+      <div className="absolute left-0 top-0 w-1/3 h-full bg-gradient-to-r from-[#990000] to-[#330000] rounded-r-full z-0 hidden md:block"></div>
+      
+      {/* Left Section - Gun Images */}
+      <div className="relative md:w-1/2 flex flex-col items-center z-10">
+        <img
+          src={selectedImage}
+          alt="Gun"
+          className="relative w-full max-w-md mx-auto object-contain rounded"
+        />
+        <div className="flex gap-2 mt-4 justify-center">
+          {selectedGun.images.map((img, index) => (
+            <button
+              key={index}
+              className={`w-16 h-16 border-4 rounded ${
+                selectedImage === img ? "border-red-500" : "border-white"
+              }`}
+              onClick={() => setSelectedImage(img)}
+            >
+              <img src={img} alt="Thumbnail" className="w-full h-full object-cover  bg-white" />
+            </button>
+          ))}
+        </div>
+      </div>
+      
+      {/* Right Section - Gun Details */}
+      <div className="md:w-1/3 p-6 text-gray-900 z-10">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-xl font-semibold">{selectedGun.brand}</h2>
+          <FaShareSquare className="text-gray-500 cursor-pointer" size={30} />
+        </div>
+        <h1 className="text-4xl font-bold mt-2">{selectedGun.model}</h1>
+        <p className="text-gray-600 mt-2">ประเภท: {selectedGun.type}</p>
+        <h3 className="font-semibold mt-4">กระสุนที่ใช้ร่วมกัน</h3>
+        <div className="flex gap-2 mt-2 flex-wrap">
+          {allCalibers.map((caliber, index) => (
+            <button
+              key={index}
+              className={`px-4 py-2 border rounded-lg ${
+                selectedGun.calibers.includes(caliber) ? "bg-black text-white" : "bg-gray-100 text-gray-700"
+              }`}
+            >
+              {caliber}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
