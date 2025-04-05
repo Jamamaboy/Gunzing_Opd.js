@@ -18,11 +18,11 @@ const Content = () => {
 
   const summaryData = [
     { title: "พื้นที่พบมากทีสุด", value: "ปทุมธานี", imageUrl: "/images/gps.png", change: "+5.2%" },
-    { title: "อาวุธปืนทั้งหมด", value: "12,309", imageUrl: "/images/gun.png", change: "+3.7%" },
+    { title: "ยาเสพติดทั้งหมด", value: "12,309", imageUrl: "/images/drug.png", change: "+3.7%" },
   ];
 
   const barData = {
-    labels: ["Glock", "Baretta", "CZ", "COLT", "Smith&Wesson"],
+    labels: ["WY", "Apple", "Y1", "YA", "ManU"],
     datasets: [
       {
         label: "จำนวน",
@@ -45,7 +45,7 @@ const Content = () => {
   };
 
   const doughnutData = {
-    labels: ["Glock", "Baretta", "CZ", "COLT", "Smith&Wesson"],
+    labels: ["WY", "Apple", "Y1", "YA", "ManU"],
     datasets: [
       {
         data: [5000, 7000, 6500, 4800],
