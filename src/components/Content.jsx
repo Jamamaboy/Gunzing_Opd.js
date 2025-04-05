@@ -18,9 +18,7 @@ const Content = () => {
 
   const summaryData = [
     { title: "พื้นที่พบมากทีสุด", value: "ปทุมธานี", imageUrl: "/images/gps.png", change: "+5.2%" },
-    { title: "วัตถุพยานทั้งหมด", value: "22,478", imageUrl: "/images/all.png", change: "+8.3%" },
     { title: "อาวุธปืนทั้งหมด", value: "12,309", imageUrl: "/images/gun.png", change: "+3.7%" },
-    { title: "ยาเสพติดทั้งหมด", value: "9,875", imageUrl: "/images/drug.png", change: "+6.1%" },
   ];
 
   const barData = {
@@ -47,7 +45,7 @@ const Content = () => {
   };
 
   const doughnutData = {
-    labels: ["ประเภท A", "ประเภท B", "ประเภท C", "ประเภท D"],
+    labels: ["Glock", "Baretta", "CZ", "COLT", "Smith&Wesson"],
     datasets: [
       {
         data: [5000, 7000, 6500, 4800],
@@ -94,7 +92,7 @@ const Content = () => {
       </div>
 
       {/* Content */}
-      <div className="grid grid-cols-1 gap-4 mb-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 mb-6 lg:grid-cols-3 h-2/3">
         {activeTab === "overview" && (
           <>
             <div className="p-4 bg-white shadow rounded lg:col-span-2 h-60 sm:h-auto">
@@ -110,16 +108,6 @@ const Content = () => {
               <Doughnut data={doughnutData} options={{ responsive: true, maintainAspectRatio: false }} />
             </div>
           </>
-        )}
-        {activeTab === "gun" && (
-          <div className="p-4 bg-blue-100 shadow rounded">
-            <p>ข้อมูลเกี่ยวกับอาวุธปืน</p>
-          </div>
-        )}
-        {activeTab === "drugs" && (
-          <div className="p-4 bg-green-100 shadow rounded">
-            <p>ข้อมูลเกี่ยวกับยาเสพติด</p>
-          </div>
         )}
       </div>
     </div>
