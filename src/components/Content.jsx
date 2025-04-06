@@ -1,117 +1,137 @@
-import { useState } from "react";
-import { Bar, Line, Doughnut } from "react-chartjs-2";
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, ArcElement, Tooltip, Legend } from "chart.js";
+import React, { useState } from "react";
+import { FiEdit, FiTrash } from "react-icons/fi";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  PointElement,
-  LineElement,
-  ArcElement,
-  Tooltip,
-  Legend
-);
+const History = () => {
+  const [isHovering, setIsHovering] = useState(null);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
-const Content = () => {
-  const [activeTab, setActiveTab] = useState("overview");
-
-  const summaryData = [
-    { title: "พื้นที่พบมากทีสุด", value: "ปทุมธานี", imageUrl: "/images/gps.png", change: "+5.2%" },
-    { title: "ยาเสพติดทั้งหมด", value: "12,309", imageUrl: "/images/drug.png", change: "+3.7%" },
+  const userData = [
+    {
+      userId: "adminxxxxxxxx",
+      image: "/images/profile.png", // รูปตัวอย่าง
+      request: "เปลี่ยนรหัสผ่าน",
+      role: "admin",
+      name: "ด.ต ไก่ บุญธรรม",
+      department: "แผนกยาเสพติด",
+    },
+    {
+      userId: "adminxxxxxxxx",
+      image: "/images/profile.png",
+      request: "เปลี่ยนรหัสผ่าน",
+      role: "admin",
+      name: "ด.ต ปลา บุญธรรม",
+      department: "แผนอาวุธปืน",
+    },
+    {
+      userId: "adminxxxxxxxx",
+      image: "/images/profile.png",
+      request: "เปลี่ยนรหัสผ่าน",
+      role: "admin",
+      name: "ด.ต เต่า บุญธรรม",
+      department: "แผนอาวุธปืน",
+    },
+    {
+      userId: "userxxxxxxxx",
+      image: "/images/profile.png",
+      request: "เปลี่ยนรหัสผ่าน",
+      role: "user",
+      name: "พล.อ ประหยัด จันทร์อังคารพุธ",
+      department: "แผนอาวุธปืน",
+    },
+    {
+      userId: "xxxxxxxxxxxx",
+      image: "/images/profile.png",
+      request: "เปลี่ยนรหัสผ่าน",
+      role: "user",
+      name: "พล.อ ประวัติ วงศ์สุพรรณ",
+      department: "แผนอาวุธปืน",
+    },
   ];
 
-  const barData = {
-    labels: ["WY", "Apple", "Y1", "YA", "ManU"],
-    datasets: [
-      {
-        label: "จำนวน",
-        data: [56635, 74779, 19027, 43887, 8142],
-        backgroundColor: "#10B981",
-      },
-    ],
-  };
-
-  const lineData = {
-    labels: ["จ", "อ", "พ", "พฤ", "ศ", "ส", "อา"],
-    datasets: [
-      {
-        label: "จำนวน",
-        data: [1500, 3000, 4800, 2000, 3900, 4200, 3500],
-        borderColor: "#3B82F6",
-        fill: false,
-      },
-    ],
-  };
-
-  const doughnutData = {
-    labels: ["WY", "Apple", "Y1", "YA", "ManU"],
-    datasets: [
-      {
-        data: [5000, 7000, 6500, 4800],
-        backgroundColor: ["#3B82F6", "#10B981", "#F59E0B", "#EF4444"],
-      },
-    ],
-  };
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = userData.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(userData.length / itemsPerPage);
 
   return (
-    <div className="p-6 h-full overflow-y-auto">
-      <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+    <div className="p-6 bg-gray-100 min-h-screen relative">
+      <h1 className="text-2xl font-semibold mb-4">การจัดการผู้ใช้งาน</h1>
 
-      {/* Tabs */}
-      <div className="flex space-x-8 mb-4 border-b">
-        {["overview", "gun", "drugs"].map((tab) => (
-          <div
-            key={tab}
-            className={`cursor-pointer pb-2 text-center transition-all ${
-              activeTab === tab ? "border-b-2 border-red-800 font-semibold" : "text-gray-600"
-            }`}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab === "overview" ? "ภาพรวม" : tab === "gun" ? "อาวุธปืน" : "ยาเสพติด"}
-          </div>
-        ))}
+      <div className="bg-white p-4 rounded shadow-md relative">
+        <table className="w-full table-fixed border-collapse">
+          <thead>
+            <tr className="bg-gray-200">
+              <th className="p-3 text-left w-[15%]">User ID</th>
+              <th className="p-3 text-left w-[8%]">รูปภาพ</th>
+              <th className="p-3 text-left w-[15%]">คำร้อง</th>
+              <th className="p-3 text-left w-[10%]">ตำแหน่ง</th>
+              <th className="p-3 text-left w-[20%]">ชื่อ-นามสกุล</th>
+              <th className="p-3 text-left w-[25%]">ประเภทการใช้งาน</th>
+              <th className="p-3 text-left w-[15%]">การจัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {currentItems.map((item, index) => (
+              <tr
+                key={index}
+                className="border-t bg-white hover:bg-red-100 transition-colors relative"
+                onMouseEnter={() => setIsHovering(index)}
+                onMouseLeave={() => setIsHovering(null)}
+              >
+                <td className="p-3">{item.userId}</td>
+                <td className="p-3">
+                  <img
+                    src={item.image}
+                    alt="User"
+                    className="w-10 h-10 object-cover"
+                  />
+                </td>
+                <td className="p-3">{item.request}</td>
+                <td className="p-3">{item.role}</td>
+                <td className="p-3">{item.name}</td>
+                <td className="p-3">{item.department}</td>
+                <td className="p-3 flex gap-2">
+                  <button className="p-2 text-[#ff9900] hover:text-[#cc7a00]">
+                    <FiEdit size={18} />
+                  </button>
+                  <button className="p-2 text-red-600 hover:text-red-800">
+                    <FiTrash size={18} />
+                  </button>
+                </td>
+
+                {/* Hover Preview */}
+                {isHovering === index && (
+                    <div className="absolute left-[150px] top-full mt-2 z-50 bg-white shadow-xl rounded-xl p-6 w-96 border border-gray-200">
+                      <div className="flex items-start gap-4">
+                        <img
+                          src={item.image}
+                          alt="User Preview"
+                          className="w-24 h-24 object-cover  border"
+                        />
+                        <div>
+                          <div className="text-xl font-bold mb-1">{item.name}</div>
+                          <div className="text-gray-600 text-base mb-1">
+                            <span className="font-semibold">ตำแหน่ง:</span> {item.role}
+                          </div>
+                          <div className="text-gray-600 text-base">
+                            <span className="font-semibold">ประเภทการใช้งาน:</span> {item.department}
+                          </div>
+                        </div>
+                      </div>
+                  </div>
+)}
+
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-2 gap-4 mb-6 sm:grid-cols-2 lg:grid-cols-4">
-        {summaryData.map((item, index) => (
-          <div key={index} className="p-4 bg-white shadow rounded flex items-center">
-            <div className="text-3xl mr-4">
-              <img src={item.imageUrl} alt={item.title} className="w-16 h-16 object-contain" />
-            </div>
-            <div className="flex flex-col">
-              <p className="text-sm text-gray-600">{item.title}</p>
-              <p className="text-xl font-bold">{item.value}</p>
-              <p className={`text-sm ${item.change.startsWith("+") ? "text-green-600" : "text-red-600"}`}>
-                {item.change}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Content */}
-      <div className="grid grid-cols-1 gap-4 mb-6 lg:grid-cols-3 h-2/3">
-        {activeTab === "overview" && (
-          <>
-            <div className="p-4 bg-white shadow rounded lg:col-span-2 h-60 sm:h-auto">
-              <Bar data={barData} options={{ responsive: true, maintainAspectRatio: false }} />
-            </div>
-            <div className="p-4 bg-gray-300 shadow rounded lg:row-span-2 flex justify-center items-center min-h-[300px]">
-              <p className="text-center">(พื้นที่สำหรับแผนที่)</p>
-            </div>
-            <div className="p-4 bg-white shadow rounded h-60 sm:h-auto">
-              <Line data={lineData} options={{ responsive: true, maintainAspectRatio: false }} />
-            </div>
-            <div className="p-4 bg-white shadow rounded h-60 sm:h-auto">
-              <Doughnut data={doughnutData} options={{ responsive: true, maintainAspectRatio: false }} />
-            </div>
-          </>
-        )}
-      </div>
+      {/* Pagination ยังใช้เหมือนเดิม */}
     </div>
   );
 };
 
-export default Content;
+export default History;
