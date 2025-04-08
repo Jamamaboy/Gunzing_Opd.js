@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แผนที่การแพร่ระบาดยาเสพติดในประเทศไทย</title>
+    <style>
+        :root {
+            --primary-color: #1a5276;
+            --secondary-color: #2980b9;
+            --accent-color: #3498db;
+            --light-gray: #f5f5f5;
+            --gray: #ddd;
+            --dark-gray: #555;
+            --font-main: 'Sarabun', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-main);
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        .dashboard {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 1rem;
+        }
+
+        .map-container {
+            flex: 3;
+            min-width: 300px;
+            height: 600px;
+            border: 1px solid var(--gray);
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .controls {
+            flex: 1;
+            min-width: 250px;
+            padding: 1rem;
+            background-color: var(--light-gray);
+            border-radius: 5px;
+            margin-left: 1rem;
+        }
+
+        .control-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .control-group h3 {
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            color: var(--dark-gray);
+        }
+
+        select, input[type="range"] {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            border: 1px solid var(--gray);
+            border-radius: 3px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.3rem;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 0.5rem;
+        }
+
+        .legend {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: white;
+            border: 1px solid var(--gray);
+            border-radius: 5px;
+        }
+
+        .legend h3 {
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.3rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 0.5rem;
+            border-radius: 3px;
+        }
+
+        .legend-text {
+            font-size: 0.9rem;
+        }
+
+        .map-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .province {
+            fill: #f0f0f0;
+            stroke: #ffffff;
+            stroke-width: 1px;
+            transition: fill 0.3s;
+        }
+
+        .province:hover {
+            fill: #d0d0d0;
+            cursor: pointer;
+        }
+
+        .province.level-1 {
+            fill: #fee5d9;
+        }
+
+        .province.level-2 {
+            fill: #fcbba1;
+        }
+
+        .province.level-3 {
+            fill: #fc9272;
+        }
+
+        .province.level-4 {
+            fill: #fb6a4a;
+        }
+
+        .province.level-5 {
+            fill: #de2d26;
+        }
+
+        .drug-route {
+            stroke: #2c3e50;
+            stroke-width: 2px;
+            stroke-dasharray: 5, 5;
+            fill: none;
+            animation: dash 1s linear infinite;
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -10;
+            }
+        }
+
+        .hotspot {
+            fill: #f39c12;
+            stroke: #ffffff;
+            stroke-width: 1px;
+        }
+
+        .distribution-point {
+            fill: #8e44ad;
+            stroke: #ffffff;
+            stroke-width: 1px;
+        }
+
+        .tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 3px;
+            font-size: 0.9rem;
+            pointer-events: none;
+            display: none;
+        }
+
+        .charts-container {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 1rem;
+            gap: 1rem;
+        }
+
+        .chart-box {
+            flex: 1;
+            min-width: 300px;
+            height: 300px;
+            border: 1px solid var(--gray);
+            border-radius: 5px;
+            overflow: hidden;
+            padding: 1rem;
+        }
+
+        .chart-title {
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .chart-placeholder {
+            width: 100%;
+            height: 250px;
+            background-color: var(--light-gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 3px;
+        }
+
+        .tabs {
+            display: flex;
+            background-color: var(--light-gray);
+            border-bottom: 1px solid var(--gray);
+        }
+
+        .tab {
+            padding: 0.8rem 1.2rem;
+            cursor: pointer;
+            background-color: var(--light-gray);
+            border: none;
+            font-family: var(--font-main);
+            font-size: 1rem;
+        }
+
+        .tab.active {
+            background-color: white;
+            border-bottom: 2px solid var(--primary-color);
+            font-weight: bold;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 1rem;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background-color: var(--light-gray);
+            align-items: center;
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .filter-item label {
+            margin-right: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .filter-select {
+            padding: 0.3rem;
+            border: 1px solid var(--gray);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>แผนที่การแพร่ระบาดยาเสพติดในประเทศไทย</h1>
+        </header>
+
+        <div class="filter-bar">
+            <div class="filter-item">
+                <label for="year-select">ปี:</label>
+                <select id="year-select" class="filter-select">
+                    <option value="2025">2025</option>
+                    <option value="2024" selected>2024</option>
+                    <option value="2023">2023</option>
+                    <option value="2022">2022</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label for="quarter-select">ไตรมาส:</label>
+                <select id="quarter-select" class="filter-select">
+                    <option value="all">ทั้งปี</option>
+                    <option value="q1">ไตรมาส 1</option>
+                    <option value="q2">ไตรมาส 2</option>
+                    <option value="q3">ไตรมาส 3</option>
+                    <option value="q4">ไตรมาส 4</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label for="view-type">มุมมอง:</label>
+                <select id="view-type" class="filter-select">
+                    <option value="cases">จำนวนคดี</option>
+                    <option value="weight">น้ำหนักของยาเสพติด</option>
+                    <option value="rate">อัตราต่อประชากร</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="map">แผนที่</button>
+            <button class="tab" data-tab="trends">แนวโน้ม</button>
+            <button class="tab" data-tab="drug-types">ประเภทยาเสพติด</button>
+            <button class="tab" data-tab="routes">เส้นทางลำเลียง</button>
+        </div>
+
+        <div id="map-tab" class="tab-content active">
+            <div class="dashboard">
+                <div class="map-container">
+                    <svg class="map-svg" viewBox="0 0 1000 1500">
+                        <!-- ที่นี่จะเป็นส่วนที่แสดงแผนที่ประเทศไทย -->
+                        <!-- ตัวอย่างของจังหวัด -->
+                        <path class="province level-5" d="M500,400 L550,450 L500,500 L450,450 Z" data-name="เชียงใหม่" data-cases="2450" data-weight="1500" data-rate="145.2" data-drugs="meth,heroin,cannabis"></path>
+                        <path class="province level-4" d="M550,450 L600,500 L550,550 L500,500 Z" data-name="เชียงราย" data-cases="1850" data-weight="1200" data-rate="120.5" data-drugs="meth,heroin"></path>
+                        <path class="province level-3" d="M500,500 L550,550 L500,600 L450,550 Z" data-name="ลำปาง" data-cases="1200" data-weight="800" data-rate="90.3" data-drugs="meth,cannabis"></path>
+                        <path class="province level-2" d="M450,450 L500,400 L450,350 L400,400 Z" data-name="แม่ฮ่องสอน" data-cases="980" data-weight="600" data-rate="78.4" data-drugs="heroin"></path>
+                        <path class="province level-4" d="M650,650 L700,700 L650,750 L600,700 Z" data-name="ตาก" data-cases="1750" data-weight="1300" data-rate="115.8" data-drugs="meth,heroin"></path>
+                        <path class="province level-1" d="M750,750 L800,800 L750,850 L700,800 Z" data-name="กรุงเทพฯ" data-cases="3200" data-weight="2500" data-rate="35.2" data-drugs="meth,cocaine,cannabis"></path>
+                        <!-- เส้นทางลำเลียง -->
+                        <path class="drug-route" d="M550,450 L500,500 L550,550 L650,650 L750,750"></path>
+                        <!-- จุดกระจายสินค้า -->
+                        <circle class="distribution-point" cx="550" cy="550" r="8" data-name="จุดกระจายสินค้า ลำปาง"></circle>
+                        <circle class="distribution-point" cx="650" cy="650" r="8" data-name="จุดกระจายสินค้า ตาก"></circle>
+                        <!-- Hot spots -->
+                        <circle class="hotspot" cx="500" cy="400" r="12" data-name="Hot spot เชียงใหม่"></circle>
+                        <circle class="hotspot" cx="750" cy="750" r="12" data-name="Hot spot กรุงเทพฯ"></circle>
+                    </svg>
+                    <div class="tooltip"></div>
+                </div>
+
+                <div class="controls">
+                    <div class="control-group">
+                        <h3>ประเภทยาเสพติด</h3>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="meth" checked>
+                                <label for="meth">ยาบ้า/เมทแอมเฟตามีน</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="heroin" checked>
+                                <label for="heroin">เฮโรอีน</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="cannabis" checked>
+                                <label for="cannabis">กัญชา</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="cocaine" checked>
+                                <label for="cocaine">โคเคน</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="ketamine" checked>
+                                <label for="ketamine">คีตามีน</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>แสดงข้อมูล</h3>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="routes" checked>
+                                <label for="routes">เส้นทางลำเลียง</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="distribution" checked>
+                                <label for="distribution">จุดกระจายสินค้า</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="hotspots" checked>
+                                <label for="hotspots">พื้นที่วิกฤติ (Hot spots)</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="legend">
+                        <h3>สัญลักษณ์</h3>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #fee5d9;"></div>
+                            <span class="legend-text">ระดับ 1: น้อย</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #fcbba1;"></div>
+                            <span class="legend-text">ระดับ 2: ปานกลาง</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #fc9272;"></div>
+                            <span class="legend-text">ระดับ 3: มาก</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #fb6a4a;"></div>
+                            <span class="legend-text">ระดับ 4: รุนแรง</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #de2d26;"></div>
+                            <span class="legend-text">ระดับ 5: วิกฤติ</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #f39c12; border-radius: 50%;"></div>
+                            <span class="legend-text">พื้นที่วิกฤติ (Hot spots)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #8e44ad; border-radius: 50%;"></div>
+                            <span class="legend-text">จุดกระจายสินค้า</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-container">
+                <div class="chart-box">
+                    <h3 class="chart-title">จำนวนคดีที่จับกุมได้ตามประเภทยาเสพติด</h3>
+                    <div class="chart-placeholder">
+                        <div>กราฟแท่งแสดงจำนวนคดีแยกตามประเภทยาเสพติด</div>
+                    </div>
+                </div>
+                <div class="chart-box">
+                    <h3 class="chart-title">น้ำหนักยาเสพติดที่จับกุมได้ (กิโลกรัม)</h3>
+                    <div class="chart-placeholder">
+                        <div>กราฟแท่งแสดงน้ำหนักยาเสพติดที่จับกุมได้</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="trends-tab" class="tab-content">
+            <div class="charts-container">
+                <div class="chart-box">
+                    <h3 class="chart-title">แนวโน้มรายปี</h3>
+                    <div class="chart-placeholder">
+                        <div>กราฟเส้นแสดงแนวโน้มรายปี</div>
+                    </div>
+                </div>
+                <div class="chart-box">
+                    <h3 class="chart-title">แนวโน้มรายฤดูกาล</h3>
+                    <div class="chart-placeholder">
+                        <div>กราฟเส้นแสดงแนวโน้มรายฤดูกาล</div>
+                    </div>
+                </div>
+                <div class="chart-box">
+                    <h3 class="chart-title">การเกิดคลัสเตอร์ (Clusters)</h3>
+                    <div class="chart-placeholder">
+                        <div>กราฟแสดงการเกิดคลัสเตอร์</div>
+                    </div>
+                </div>
+                <div class="chart-box">
+                    <h3 class="chart-title">การกระจายตัวรายเดือน</h3>
+                    <div class="chart-placeholder">
+                        <div>กราฟแสดงการกระจายตัวรายเดือน</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="drug-types-tab" class="tab-content">
+            <div class="charts-container">
+                <div class="chart-box">
+                    <h3 class="chart-title">การแพร่ระบาดของยาเสพติดแต่ละประเภท</h3>
+                    <div class="chart-placeholder">
+                        <div>แผนที่ความร้อนแสดงการแพร่ระบาด</div>
+                    </div>
+                </div>
+                <div class="chart-box">
+                    <h3 class="chart-title">สัดส่วนของยาเสพติดแต่ละประเภท</h3>
+                    <div class="chart-placeholder">
+                        <div>กราฟวงกลมแสดงสัดส่วน</div>
+                    </div>
+                </div>
+                <div class="chart-box">
+                    <h3 class="chart-title">พื้นที่ที่มีการระบาดพร้อมกันหลายประเภท</h3>
+                    <div class="chart-placeholder">
+                        <div>แผนที่แสดงพื้นที่ที่มีการระบาดพร้อมกันหลายประเภท</div>
+                    </div>
+                </div>
+                <div class="chart-box">
+                    <h3 class="chart-title">การเปลี่ยนแปลงของประเภทยาเสพติดตามเวลา</h3>
+                    <div class="chart-placeholder">
+                        <div>กราฟแสดงการเปลี่ยนแปลงตามเวลา</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="routes-tab" class="tab-content">
+            <div class="charts-container">
+                <div class="chart-box" style="flex: 2; min-width: 500px;">
+                    <h3 class="chart-title">เส้นทางลำเลียงยาเสพติด</h3>
+                    <div class="chart-placeholder">
+                        <div>แผนที่แสดงเส้นทางลำเลียง</div>
+                    </div>
+                </div>
+                <div class="chart-box">
+                    <h3 class="chart-title">จุดลำเลียงและกระจายสินค้า</h3>
+                    <div class="chart-placeholder">
+                        <div>กราฟแสดงจุดลำเลียงและกระจายสินค้า</div>
+                    </div>
+                </div>
+                <div class="chart-box">
+                    <h3 class="chart-title">เส้นทางหลักที่พบการลำเลียง</h3>
+                    <div class="chart-placeholder">
+                        <div>ตารางแสดงเส้นทางหลัก</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // เปลี่ยนแท็บ
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+                
+                // ซ่อนทุกแท็บ
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                // ยกเลิกการเลือกทุกแท็บ
+                tabs.forEach(t => {
+                    t.classList.remove('active');
+                });
+                
+                // แสดงแท็บที่เลือก
+                document.getElementById(`${tabId}-tab`).classList.add('active');
+                tab.classList.add('active');
+            });
+        });
+
+        // Tooltip สำหรับแผนที่
+        const provinces = document.querySelectorAll('.province');
+        const tooltip = document.querySelector('.tooltip');
+        
+        provinces.forEach(province => {
+            province.addEventListener('mouseover', (e) => {
+                const name = province.getAttribute('data-name');
+                const cases = province.getAttribute('data-cases');
+                const weight = province.getAttribute('data-weight');
+                const rate = province.getAttribute('data-rate');
+                const drugs = province.getAttribute('data-drugs').split(',').join(', ');
+                
+                tooltip.innerHTML = `
+                    <strong>${name}</strong><br>
+                    จำนวนคดี: ${cases}<br>
+                    น้ำหนักยาเสพติด: ${weight} กรัม<br>
+                    อัตราต่อประชากร: ${rate} ต่อแสนคน<br>
+                    ประเภทยาเสพติด: ${drugs}
+                `;
+                
+                tooltip.style.display = 'block';
+                tooltip.style.left = `${e.pageX - 100}px`;
+                tooltip.style.top = `${e.pageY - 120}px`;
+            });
+            
+            province.addEventListener('mouseout', () => {
+                tooltip.style.display = 'none';
+            });
+        });
+
+        // Tooltip สำหรับจุดกระจายสินค้าและ Hot spots
+        const points = document.querySelectorAll('.distribution-point, .hotspot');
+        
+        points.forEach(point => {
+            point.addEventListener('mouseover', (e) => {
+                const name = point.getAttribute('data-name');
+                
+                tooltip.innerHTML = `<strong>${name}</strong>`;
+                tooltip.style.display = 'block';
+                tooltip.style.left = `${e.pageX - 50}px`;
+                tooltip.style.top = `${e.pageY - 40}px`;
+            });
+            
+            point.addEventListener('mouseout', () => {
+                tooltip.style.display = 'none';
+            });
+        });
+
+        // สร้างฟังก์ชันสำหรับการเปลี่ยนแปลงมุมมอง
+        document.getElementById('view-type').addEventListener('change', function() {
+            const viewType = this.value;
+            // ในที่นี้จะเป็นโค้ดสำหรับเปลี่ยนมุมมองแผนที่ตามที่เลือก
+            console.log(`Changed view to: ${viewType}`);
+        });
+
+        // สร้างฟังก์ชันสำหรับการเปลี่ยนแปลงปีและไตรมาส
+        document.getElementById('year-select').addEventListener('change', function() {
+            const year = this.value;
+            // ในที่นี้จะเป็นโค้ดสำหรับเปลี่ยนข้อมูลตามปีที่เลือก
+            console.log(`Changed year to: ${year}`);
+        });
+
+        document.getElementById('quarter-select').addEventListener('change', function() {
+            const quarter = this.value;
+            // ในที่นี้จะเป็นโค้ดสำหรับเปลี่ยนข้อมูลตามไตรมาสที่เลือก
+            console.log(`Changed quarter to: ${quarter}`);
+        });
+
+        // สร้างฟังก์ชันสำหรับการเปลี่ยนแปลงการแสดงข้อมูล
+        document.getElementById('routes').addEventListener('change', function() {
+            const routes = document.querySelectorAll('.drug-route');
+            routes.forEach(route => {
+                route.style.display = this.checked ? 'block' : 'none';
+            });
+        });
+
+        document.getElementById('distribution').addEventListener('change', function() {
+            const points = document.querySelectorAll('.distribution-point');
+            points.forEach(point => {
+                point.style.display = this.checked ? 'block' : 'none';
+            });
+        });
+
+        document.getElementById('hotspots').addEventListener('change', function() {
+            const hotspots = document.querySelectorAll('.hotspot');
+            hotspots.forEach(hotspot => {
+                hotspot.style.display = this.checked ? 'block' : 'none';
+            });
+        });
+
+        // สร้างฟังก์ชันสำหรับการเปลี่ยนแปลงประเภทยาเสพติด
+        const drugTypes = ['meth', 'heroin', 'cannabis', 'cocaine', 'ketamine'];
+        
+        drugTypes.forEach(drug => {
+            document.getElementById(drug).addEventListener('change', function() {
+                // ในที่นี้จะเป็นโค้ดสำหรับกรองข้อมูลตามประเภทยาเสพติด
+                console.log(`Changed ${drug} filter to: ${this.checked}`);
+                
+                // เพื่อให้เห็นผลการเปลี่ยนแปลง
+                provinces.forEach(province => {
+                    const drugs = province.getAttribute('data-drugs').split(',');
+                    if (drugs.includes(drug)) {
+                        if (!this.checked) {
+                            province.style.opacity = '0.3';
+                        } else {
+                            province.style.opacity = '1';
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
