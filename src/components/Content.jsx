@@ -18,9 +18,9 @@ const Content = () => {
 
   const summaryData = [
     { title: "พื้นที่พบมากทีสุด", value: "ปทุมธานี", imageUrl: "/images/gps.png", change: "+5.2%" },
-    { title: "วัตถุพยานทั้งหมด", value: "22,478", imageUrl: "/images/all.png", change: "+8.3%" },
-    { title: "อาวุธปืนทั้งหมด", value: "12,309", imageUrl: "/images/gun.png", change: "+3.7%" },
-    { title: "ยาเสพติดทั้งหมด", value: "9,875", imageUrl: "/images/drug.png", change: "+6.1%" },
+    { title: "วัตถุพยานทั้งหมด", value: "100000", imageUrl: "/images/all.png", change: "+8.3%" },
+    { title: "อาวุธปืนทั้งหมด", value: "800", imageUrl: "/images/gun.png", change: "+3.7%" },
+    { title: "ยาเสพติดทั้งหมด", value: "99200", imageUrl: "/images/drug.png", change: "+6.1%" },
   ];
 
   const barData = {
@@ -28,7 +28,7 @@ const Content = () => {
     datasets: [
       {
         label: "จำนวน",
-        data: [56635, 74779, 19027, 43887, 8142],
+        data: [300, 97, 15, 150, 70],
         backgroundColor: "#10B981",
       },
     ],
@@ -39,7 +39,7 @@ const Content = () => {
     datasets: [
       {
         label: "จำนวน",
-        data: [1500, 3000, 4800, 2000, 3900, 4200, 3500],
+        data: [2, 6, 11, 1, 9, 4, 13],
         borderColor: "#3B82F6",
         fill: false,
       },
