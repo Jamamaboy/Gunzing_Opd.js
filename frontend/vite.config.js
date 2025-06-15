@@ -2,8 +2,19 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// https://vitejs.dev/config/
 export default defineConfig({
+  build: {
+    chunkSizeWarningLimit: 3000, // เพิ่มจาก 500 เป็น 3000 kB
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ui: ['@mui/material', '@emotion/react', '@emotion/styled'],
+          // แยก libraries ใหญ่ๆ ออกเป็น chunk แยก
+        }
+      }
+    }
+  },
   plugins: [
     react(),
     VitePWA({
@@ -53,7 +64,19 @@ export default defineConfig({
             form_factor: 'wide'
           }
         ]
+      },
+      workbox: {
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // เพิ่มเป็น 5 MB
       }
     })
-  ]
+  ],
+  server: {
+    host: true,
+    strictPort: true,
+    port: 5173,
+    allowedHosts: ["b1dc-49-237-19-118.ngrok-free.app"],
+    watch: {
+      usePolling: true
+    }
+  }
 })

@@ -1,173 +1,196 @@
 import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { IoClose } from 'react-icons/io5';
+import { PiImageBroken } from "react-icons/pi";
+import DownloadButton from '../shared/DownloadButton';
 
-const DrugProfile = ({ analysisResult }) => {
-  // State for share notification
-  const [showShareNotification, setShowShareNotification] = useState(false);
+const DrugProfile = ({ analysisResult, evidence, fromCamera, sourcePath }) => {
+  const [catalogData, setCatalogData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [fullScreen, setFullScreen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
   
-  // Default data if no analysis result is provided
-  const drugData = analysisResult ? {
-    type: analysisResult.prediction || '',
-    brand: analysisResult.details && analysisResult.details.length > 0 ? 
-      analysisResult.details[0].pill_name : '',
+  const drugData = evidence ? {
+    id: evidence.id || '',
+    category: evidence.drug_category || 'ไม่ระบุหมวดหมู่',
+    image: evidence.example_images?.map(img => img.image_url) || [],
+    form: evidence.drug_form.name || 'ไม่ระบุรูปแบบ',
+    characteristics: evidence.characteristics || 'ไม่ระบุลักษณะ',
+    consumption_method: evidence.consumption_method || 'ไม่ระบุวิธีการใช้',
+    effect: evidence.effect || 'ไม่ระบุผลต่อร่างกาย',
+    weight_grams: evidence.weight_grams || 'ไม่ระบุน้ำหนัก',
+    color: evidence.pill_info?.color || 'ไม่ระบุสี',
+    diameter_mm: evidence.pill_info?.diameter_mm || 'ไม่ระบุเส้นผ่านศูนย์กลาง',
+    thickness_mm: evidence.pill_info?.thickness_mm || 'ไม่ระบุความหนา',
+    edge_shape: evidence.pill_info?.edge_shape || 'ไม่ระบุรูปทรงขอบ',
+    drug_id: evidence.id || '',
     confidence: analysisResult.confidence 
-      ? Math.round(analysisResult.confidence * 100) 
-      : 78
+      ? analysisResult.confidence
+      : null
   } : {
-    type: '',
-    brand: '',
-    confidence: 78
+    drug_id: '',
+    confidence: null
   };
-
-  // Get the image from localStorage if available
-  const imageUrl = localStorage.getItem('analysisImage') || 
-    "https://static.thairath.co.th/media/NjpUs24nCQKx5e1DGjlQPs22NFuMf4uNTBL7sYwj5kL.jpg";
+  
+  const imageUrl = localStorage.getItem('analysisImage') || "";
 
   const calculateOffset = (percent) => {
     const circumference = 2 * Math.PI * 45;
     return circumference - (circumference * percent / 100);
   };
 
-  // Function to handle share button click
-  const handleShare = async () => {
-    const pageUrl = window.location.href;
-    const shareTitle = `ยาเสพติด: ${drugData.type}`;
-    const shareText = `ผลการวิเคราะห์ยาเสพติด - ประเภท: ${drugData.type}, แหล่งผลิต: ${drugData.brand}, ความมั่นใจ: ${drugData.confidence}%`;
-    
-    // Try to use the Web Share API if available
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: shareTitle,
-          text: shareText,
-          url: pageUrl
-        });
-      } catch (err) {
-        console.error('Error sharing:', err);
-      }
-    } else {
-      // Fallback: copy to clipboard
-      try {
-        await navigator.clipboard.writeText(pageUrl);
-        setShowShareNotification(true);
-        setTimeout(() => setShowShareNotification(false), 3000);
-      } catch (err) {
-        console.error('Could not copy URL:', err);
-      }
-    }
-  };
+  const NoImageDisplay = ({ message = "การแสดงผลภาพถ่ายมีปัญหา" }) => (
+    <div className="flex flex-col items-center justify-center p-6 bg-gray-50 rounded-lg border border-gray-200 h-64 w-full">
+      <PiImageBroken className="text-gray-400 text-5xl mb-2" />
+      <p className="text-gray-500 text-center">{message}</p>
+    </div>
+  );
+
+  const LoadingState = () => (
+    <div className="flex justify-center items-center p-4">
+      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#990000]"></div>
+      <span className="ml-3 text-gray-600">กำลังค้นหาข้อมูลยาเสพติด...</span>
+    </div>
+  );
+
+  const ErrorState = ({ message }) => (
+    <div className="p-4 text-red-600 text-sm">
+      เกิดข้อผิดพลาดในการค้นหาข้อมูล: {message}
+    </div>
+  );
 
   // Desktop version
   const DesktopView = () => (
-    <div className="hidden md:flex flex-row h-full w-full">
+    <div className="hidden md:flex flex-col relative md:flex-row items-center p-6 bg-white h-full">
       {/* Left column - Drug image */}
       <div className="w-1/2 p-6 flex justify-center items-center">
-        <img 
-          src={imageUrl} 
-          alt="ยา WY" 
-          className="max-w-full h-auto object-contain max-h-96"
-        />
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt="ยาเสพติด"
+            className="max-w-full h-auto object-contain max-h-96 cursor-pointer"
+            onClick={() => setFullScreen(true)}
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.nextElementSibling.style.display = 'flex';
+            }}
+          />
+        ) : (
+          <NoImageDisplay />
+        )}
+        <div className="hidden flex-col items-center justify-center">
+          <NoImageDisplay message="การแสดงผลภาพผิดพลาด" />
+        </div>
       </div>
 
       {/* Right column - Drug details */}
-      <div className="w-1/2 p-6 flex flex-col justify-between h-full">
-        {/* Top section with title and share button */}
+      <div className="w-1/2 p-6 flex flex-col h-full scrollbar-hide">
+        {/* Top section - Brand & Type */}
         <div>
-          <div className="flex justify-between items-center border-b pb-4 mb-6">
-            <h2 className="text-2xl font-medium">ยาเสพติด {drugData.type}</h2>
-            <button 
-              className="text-gray-600 hover:text-gray-800 focus:outline-none"
-              onClick={handleShare}
-              aria-label="แชร์"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-              </svg>
-            </button>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-medium text-gray-500">
+              {drugData.category}
+            </h2>
+            <DownloadButton />
           </div>
+          <h1 className="text-3xl uppercase font-bold mt-3 break-words leading-tight max-w-[60%] hyphens-auto">
+            {drugData.characteristics}
+          </h1>
+        </div>
 
-          {/* Details section with confidence meter to the right */}
-          <div className="mb-8">
-            <div className="flex flex-row">
-              {/* Details column */}
-              <div className="space-y-4 w-1/2">
-                <h3 className="text-xl font-medium mb-4">รายละเอียด</h3>
-                <div className="flex">
-                  <span className="text-gray-600 w-40">ประเภท:</span> 
-                  <span>{drugData.type}</span>
-                </div>
-                <div className="flex">
-                  <span className="text-gray-600 w-40">แหล่งผลิต:</span> 
-                  <span>{drugData.brand}</span>
-                </div>
-                
-                {/* Additional details if available from analysis */}
-                {analysisResult && analysisResult.details && analysisResult.details.length > 0 && (
-                  <div className="mt-6">
-                    <h4 className="font-medium mb-2">ผลการวิเคราะห์เพิ่มเติม:</h4>
-                    <ul className="space-y-2">
-                      {analysisResult.details.slice(0, 3).map((detail, index) => (
-                        <li key={index} className="flex">
-                          <span className="text-gray-600 w-40">{detail.pill_name}:</span>
-                          <span>{(detail.confidence * 100).toFixed(1)}%</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+        {/* Middle section - Analysis Results and confidence */}
+        <div className="mt-6 pt-4 border-t border-gray-200">
+          <div className="flex flex-row">
+            {/* Analysis Results column */}
+            <div className="space-y-4 w-1/2">
+              <div className="grid grid-cols-3 gap-4">
+                <span className="text-gray-600 font-medium">รูปแบบ: </span>
+                <span className="text-gray-600 col-span-2">{drugData.form}</span>
               </div>
-              
-              {/* Confidence meter on the right */}
-              <div className="flex flex-col items-center justify-top w-1/2">
-                <div className="w-24 h-24 relative">
-                  <svg viewBox="0 0 100 100" className="w-full h-full">
-                    {/* Background circle */}
-                    <circle 
-                      cx="50" 
-                      cy="50" 
-                      r="45" 
-                      fill="none" 
-                      stroke="#e6e6e6" 
-                      strokeWidth="8" 
-                    />
-                    
-                    {/* Progress circle - going clockwise */}
-                    <circle 
-                      cx="50" 
-                      cy="50" 
-                      r="45" 
-                      fill="none" 
-                      stroke="#8B0000" 
-                      strokeWidth="8" 
-                      strokeDasharray={2 * Math.PI * 45} 
-                      strokeDashoffset={calculateOffset(drugData.confidence)} 
-                      transform="rotate(-90 50 50)" 
-                    />
-                    
-                    {/* Text in the middle */}
-                    <text 
-                      x="50" 
-                      y="50" 
-                      textAnchor="middle" 
-                      dominantBaseline="middle" 
-                      fontSize="20" 
-                      fontWeight="bold"
-                      fill="#8B0000"
-                    >
-                      {drugData.confidence}%
-                    </text>
-                  </svg>
+              <div className="grid grid-cols-3 gap-4">
+                <span className="text-gray-600 font-medium">ลักษณะ:</span>
+                <span className="text-gray-600 col-span-2">{drugData.characteristics}</span>
+              </div>
+              <div className="mt-6 border-t border-gray-200 pt-4 space-y-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <span className="text-gray-600 font-medium">สี:</span>
+                  <span className="text-gray-600 col-span-2">{drugData.color}</span>
                 </div>
-                <div className="mt-2">
-                  <p className="text-gray-600">ความมั่นใจ</p>
+                <div className="grid grid-cols-3 gap-4">
+                  <span className="text-gray-600 font-medium">เส้นผ่านศูนย์กลาง:</span>
+                  <span className="text-gray-600 col-span-2">{drugData.diameter_mm} มม.</span>
                 </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <span className="text-gray-600 font-medium">ความหนา:</span>
+                  <span className="text-gray-600 col-span-2">{drugData.thickness_mm} มม.</span>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <span className="text-gray-600 font-medium">รูปทรงขอบ:</span>
+                  <span className="text-gray-600 col-span-2">{drugData.edge_shape}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <span className="text-gray-600 font-medium">น้ำหนัก:</span>
+                  <span className="text-gray-600 col-span-2">{drugData.weight_grams} กรัม</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Confidence meter on the right */}
+            <div className="flex flex-col items-center justify-top w-1/2">
+              <div className="w-24 h-24 relative">
+                <svg viewBox="0 0 100 100" className="w-full h-full">
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="45"
+                    fill="none"
+                    stroke="#e6e6e6"
+                    strokeWidth="8"
+                  />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="45"
+                    fill="none"
+                    stroke="#8B0000"
+                    strokeWidth="8"
+                    strokeDasharray={2 * Math.PI * 45}
+                    strokeDashoffset={calculateOffset((drugData.confidence || 0) * 100)}
+                    transform="rotate(-90 50 50)"
+                  />
+                  <text 
+                    x="50" 
+                    y="50" 
+                    textAnchor="middle" 
+                    dominantBaseline="middle" 
+                    fontSize="20" 
+                    fontWeight="bold"
+                    fill="#8B0000"
+                  >
+                    {Math.round((drugData.confidence || 0) * 100)}%
+                  </text>
+                </svg>
+              </div>
+              <div className="mt-2">
+                <p className="text-gray-600">ความมั่นใจ</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Bottom section */}
-        <div className="mt-auto">
-          {/* You can add buttons or additional information here */}
+        <div className="mt-6 border-t border-gray-200 pt-4 space-y-4">
+          <div className="grid grid-cols-3 gap-4">
+            <span className="text-gray-600 font-medium">วิธีการใช้:</span>
+            <span className="text-gray-600 col-span-2">{drugData.consumption_method}</span>
+          </div>
+        </div>
+
+        <div className="mt-6 border-t border-gray-200 pt-4 space-y-4">
+          <div className="grid grid-cols-3 gap-4">
+            <span className="text-gray-600 font-medium">ผลต่อร่างกาย:</span>
+            <span className="text-gray-600 col-span-2">{drugData.effect}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -175,94 +198,114 @@ const DrugProfile = ({ analysisResult }) => {
 
   // Mobile version
   const MobileView = () => (
-    <div className="flex md:hidden flex-col h-full w-full">
+    <div className="flex md:hidden flex-col h-full px-4">
       {/* Drug image */}
       <div className="p-4 flex justify-center items-center">
-        <img 
-          src={imageUrl} 
-          alt="ยาเสพติด" 
-          className="max-w-full h-auto object-contain max-h-60"
-        />
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt="ยาเสพติด"
+            className="max-w-full h-auto object-contain max-h-60 cursor-pointer"
+            onClick={() => setFullScreen(true)}
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.nextElementSibling.style.display = 'flex';
+            }}
+          />
+        ) : (
+          <NoImageDisplay />
+        )}
+        <div className="hidden flex-col items-center justify-center">
+          <NoImageDisplay message="การแสดงผลภาพผิดพลาด" />
+        </div>
       </div>
 
-      {/* Drug title with share button */}
-      <div className="flex justify-between items-center p-4 border-b">
-        <h2 className="text-xl font-medium">ยาเสพติด {drugData.type}</h2>
-        <button 
-          className="text-gray-600 hover:text-gray-800 focus:outline-none" 
-          onClick={handleShare}
-          aria-label="แชร์"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-          </svg>
-        </button>
+      {/* Drug title */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-gray-500 font-medium">
+          {drugData.category || 'ยาเสพติด'}
+        </h2>
+        <DownloadButton />
       </div>
+      <h1 className="text-2xl uppercase font-bold mt-1 break-words leading-tight max-w-[60%] hyphens-auto">
+        {drugData.characteristics}
+      </h1>
 
       {/* Details section with confidence meter on right side */}
-      <div className="px-4 mt-4">
+      <div className="mt-4 pt-4 border-t border-gray-200">
         <div className="flex items-start">
           {/* Details on left */}
           <div className="flex-1">
-            <h3 className="text-lg font-medium mb-2">รายละเอียด</h3>
-            <div className="py-2 flex">
-              <span className="text-gray-600 w-32">ประเภท:</span> 
-              <span className="font-medium">{drugData.type}</span>
+            <div className="grid grid-cols-3 gap-2">
+              <span className="text-gray-600 font-medium">รูปแบบ:</span>
+              <span className="text-gray-600 col-span-2">{drugData.form}</span>
             </div>
-            <div className="py-2 flex">
-              <span className="text-gray-600 w-32">แหล่งผลิต:</span> 
-              <span className="font-medium">{drugData.brand}</span>
-            </div>
-            
-            {/* Additional details if available from analysis */}
-            {analysisResult && analysisResult.details && analysisResult.details.length > 0 && (
-              <div className="mt-4">
-                <h4 className="font-medium">ผลการวิเคราะห์เพิ่มเติม:</h4>
-                <ul>
-                  {analysisResult.details.slice(0, 2).map((detail, index) => (
-                    <li key={index} className="py-2 flex">
-                      <span className="text-gray-600 w-32">{detail.pill_name}:</span>
-                      <span className="font-medium">{(detail.confidence * 100).toFixed(1)}%</span>
-                    </li>
-                  ))}
-                </ul>
+
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="grid grid-cols-3 gap-2">
+                <span className="text-gray-600 font-medium">ลักษณะ:</span>
+                <span className="text-gray-600 col-span-2">{drugData.characteristics}</span>
               </div>
-            )}
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="grid grid-cols-3 gap-2">
+                <span className="text-gray-600 font-medium">สี:</span>
+                <span className="text-gray-600 col-span-2">{drugData.color}</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              {/* Additional details if available */}
+              {evidence && evidence.details && evidence.details.length > 0 && (
+                <div className="mt-4 pt-3 border-t border-gray-200">
+                  <h4 className="font-medium text-gray-600 mb-2 text-sm">ผลการวิเคราะห์เพิ่มเติม</h4>
+                  <div className="space-y-2">
+                    {evidence.details.slice(0, 2).map((detail, index) => (
+                      <div key={index} className="grid grid-cols-3 gap-2">
+                        <span className="text-gray-600 font-medium text-sm">{detail.pill_name}:</span>
+                        <span className="text-gray-600 col-span-2 text-sm">{(detail.confidence * 100).toFixed(1)}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           
           {/* Confidence meter on right */}
           <div className="ml-4 flex-shrink-0">
             <div className="w-20 h-20 relative">
               <svg viewBox="0 0 100 100" className="w-full h-full">
-                <circle 
-                  cx="50" 
-                  cy="50" 
-                  r="45" 
-                  fill="none" 
-                  stroke="#e6e6e6" 
-                  strokeWidth="8" 
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="45"
+                  fill="none"
+                  stroke="#e6e6e6"
+                  strokeWidth="8"
                 />
-                <circle 
-                  cx="50" 
-                  cy="50" 
-                  r="45" 
-                  fill="none" 
-                  stroke="#8B0000" 
-                  strokeWidth="8" 
-                  strokeDasharray={2 * Math.PI * 45} 
-                  strokeDashoffset={calculateOffset(drugData.confidence)} 
-                  transform="rotate(-90 50 50)" 
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="45"
+                  fill="none"
+                  stroke="#8B0000"
+                  strokeWidth="8"
+                  strokeDasharray={2 * Math.PI * 45}
+                  strokeDashoffset={calculateOffset((drugData.confidence || 0) * 100)}
+                  transform="rotate(-90 50 50)"
                 />
                 <text 
                   x="50" 
                   y="50" 
                   textAnchor="middle" 
                   dominantBaseline="middle" 
-                  fontSize="20" 
+                  fontSize="18" 
                   fontWeight="bold"
                   fill="#8B0000"
                 >
-                  {drugData.confidence}%
+                  {Math.round((drugData.confidence || 0) * 100)}%
                 </text>
               </svg>
             </div>
@@ -271,19 +314,127 @@ const DrugProfile = ({ analysisResult }) => {
             </div>
           </div>
         </div>
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="grid grid-cols-3 gap-2">
+            <span className="text-gray-600 font-medium">เส้นผ่านศูนย์กลาง:</span>
+            <span className="text-gray-600 col-span-2">{drugData.diameter_mm} มม.</span>
+          </div>
+        </div>
+
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="grid grid-cols-3 gap-2">
+            <span className="text-gray-600 font-medium">ความหนา:</span>
+            <span className="text-gray-600 col-span-2">{drugData.thickness_mm} มม.</span>
+          </div>
+        </div>
+
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="grid grid-cols-3 gap-2">
+            <span className="text-gray-600 font-medium">รูปทรงขอบ:</span>
+            <span className="text-gray-600 col-span-2">{drugData.edge_shape}</span>
+          </div>
+        </div>
+
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="grid grid-cols-3 gap-2">
+            <span className="text-gray-600 font-medium">น้ำหนัก:</span>
+            <span className="text-gray-600 col-span-2">{drugData.weight_grams} กรัม</span>
+          </div>
+        </div>
+
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="grid grid-cols-3 gap-2">
+            <span className="text-gray-600 font-medium">วิธีการใช้:</span>
+            <span className="text-gray-600 col-span-2">{drugData.consumption_method}</span>
+          </div>
+        </div>
+
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="grid grid-cols-3 gap-2">
+            <span className="text-gray-600 font-medium">ผลต่อร่างกาย:</span>
+            <span className="text-gray-600 col-span-2">{drugData.effect}</span>
+          </div>
+        </div>
       </div>
+
+      {loading && (
+        <div className="text-center py-4">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#800000] mx-auto"></div>
+          <p className="text-gray-600 text-sm mt-2">กำลังโหลด...</p>
+        </div>
+      )}
+      
+      {catalogData && (
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <h3 className="text-lg font-medium mb-3">ข้อมูลจากแคตตาล็อก</h3>
+          
+          <div className="space-y-3">
+            <div className="grid grid-cols-3 gap-2">
+              <span className="text-gray-600 font-medium text-sm">รูปแบบ:</span>
+              <span className="text-gray-600 col-span-2 text-sm">{drugData.form}</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <span className="text-gray-600 font-medium text-sm">ลักษณะ:</span>
+              <span className="text-gray-600 col-span-2 text-sm">{catalogData.characteristics}</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <span className="text-gray-600 font-medium text-sm">วิธีการใช้:</span>
+              <span className="text-gray-600 col-span-2 text-sm">{catalogData.consumption_method}</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <span className="text-gray-600 font-medium text-sm">ผลต่อร่างกาย:</span>
+              <span className="text-gray-600 col-span-2 text-sm">{catalogData.effect}</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <span className="text-gray-600 font-medium text-sm">น้ำหนัก:</span>
+              <span className="text-gray-600 col-span-2 text-sm">{catalogData.weight_grams} กรัม</span>
+            </div>
+          </div>
+
+          {catalogData.color !== 'ไม่ระบุสี' && (
+            <div className="mt-4 pt-3 border-t border-gray-200">
+              <h4 className="font-medium text-gray-600 mb-2 text-sm">ข้อมูลเม็ดยา</h4>
+              <div className="space-y-2">
+                <div className="grid grid-cols-3 gap-2">
+                  <span className="text-gray-600 font-medium text-sm">สี:</span>
+                  <span className="text-gray-600 col-span-2 text-sm">{catalogData.color}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <span className="text-gray-600 font-medium text-sm">เส้นผ่านศูนย์กลาง:</span>
+                  <span className="text-gray-600 col-span-2 text-sm">{catalogData.diameter_mm} มม.</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <span className="text-gray-600 font-medium text-sm">ความหนา:</span>
+                  <span className="text-gray-600 col-span-2 text-sm">{catalogData.thickness_mm} มม.</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <span className="text-gray-600 font-medium text-sm">รูปทรงขอบ:</span>
+                  <span className="text-gray-600 col-span-2 text-sm">{catalogData.edge_shape}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 
   return (
-    <div className="bg-white w-full h-full flex flex-col relative">
+    <div className="bg-white h-full flex flex-col relative">
       <DesktopView />
       <MobileView />
-      
-      {/* Share notification toast */}
-      {showShareNotification && (
-        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded shadow-lg">
-          คัดลอกลิงก์สำเร็จแล้ว
+
+      {/* Full Screen Modal for Image */}
+      {fullScreen && imageUrl && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center z-50">
+          <button 
+            className="absolute top-4 right-4 text-white text-3xl p-2 bg-gray-800 rounded-full"
+            onClick={() => setFullScreen(false)}
+          >
+            <IoClose />
+          </button>
+          
+          <img src={imageUrl} alt="Full Screen" className="max-w-full max-h-[80vh] object-contain mb-4 px-4" />
         </div>
       )}
     </div>

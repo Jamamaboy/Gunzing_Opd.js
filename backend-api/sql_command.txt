@@ -1,0 +1,7 @@
+chcp 65001
+psql -U postgres //Login เข้า postgres
+CREATE DATABASE "raven_db" ENCODING 'UTF8';
+\c <ชื่อฐานข้อมูล> //เชื่อมต่อเข้าไปในฐานข้อมูลที่ต้องการ
+SHOW server_encoding;
+SET client_encoding TO 'UTF8';
+pg_dump -U postgres -d image-processing-in-forensic -f docker_backup.sql --encoding=UTF8

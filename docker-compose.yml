@@ -1,0 +1,53 @@
+version: '3'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend-api
+    
+  backend-api:
+    image: backend-api:complete
+    volumes:
+      - ./backend-api:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db-service:5432/raven_db
+      - ML_SERVICE_URL=http://ai-inference-service:8080
+    depends_on:
+      - db-service
+      - ai-inference-service
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    
+  ai-inference-service:
+    image: ai-inference-service:complete
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./ai-inference-service:/app
+      - ./ai-inference-service/model:/app/model
+    command: python -m uvicorn app:app --host 0.0.0.0 --port 8080 --reload
+
+  db-service:
+    image: postgis-with-pgvector:17
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=raven_db
+      - POSTGRES_INITDB_ARGS=--encoding=UTF8 --locale=C.UTF-8
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/data
+      - ./postgres/init-extensions.sql:/docker-entrypoint-initdb.d/init-extensions.sql
+      - ./postgres/exports:/exports
+
+volumes:
+  postgres_data:
