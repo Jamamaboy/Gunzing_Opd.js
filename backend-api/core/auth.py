@@ -1,14 +1,22 @@
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from typing import Optional
-from fastapi import Depends, HTTPException, status, Cookie, Header
+from fastapi import Depends, HTTPException, status, Cookie, Header, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from passlib.context import CryptContext
 import os
 from dotenv import load_dotenv
 from config.database import get_db
+import logging
 
 load_dotenv()
+
+# ตั้งค่า logger
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 
@@ -104,3 +112,77 @@ async def get_admin_user(
         )
     
     return user
+
+# ตั้งค่า cookie options สำหรับ production
+def get_cookie_options():
+    base_options = {
+        "httponly": True,
+        "samesite": "None",  # ใช้ None สำหรับ cross-site requests
+        "secure": True,      # ใช้ secure ใน production
+        "path": "/"
+    }
+    return base_options
+
+def set_auth_cookies(response: Response, access_token: str, refresh_token: str, csrf_token: str):
+    cookie_options = get_cookie_options()
+    
+    # ตั้งค่า access token cookie
+    response.set_cookie(
+        key=ACCESS_COOKIE_NAME,
+        value=access_token,
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        **cookie_options
+    )
+    
+    # ตั้งค่า refresh token cookie
+    refresh_options = cookie_options.copy()
+    refresh_options["path"] = "/api/auth"  # จำกัดให้ใช้ได้เฉพาะกับ refresh endpoint
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        max_age=7 * 24 * 60 * 60,  # 7 วัน
+        **refresh_options
+    )
+    
+    # ตั้งค่า CSRF token cookie (ไม่ใช่ httponly)
+    csrf_options = {
+        "httponly": False,  # ให้ JS เข้าถึงได้
+        "samesite": cookie_options["samesite"],
+        "secure": cookie_options["secure"],
+        "path": "/"
+    }
+    response.set_cookie(
+        key=CSRF_TOKEN_NAME,
+        value=csrf_token,
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        **csrf_options
+    )
+
+def clear_auth_cookies(response: Response):
+    cookie_options = get_cookie_options()
+    
+    # ลบ access token cookie
+    response.delete_cookie(
+        key=ACCESS_COOKIE_NAME,
+        **cookie_options
+    )
+    
+    # ลบ refresh token cookie
+    refresh_options = cookie_options.copy()
+    refresh_options["path"] = "/api/auth"
+    response.delete_cookie(
+        key="refresh_token",
+        **refresh_options
+    )
+    
+    # ลบ CSRF token cookie
+    csrf_options = {
+        "httponly": False,
+        "samesite": cookie_options["samesite"],
+        "secure": cookie_options["secure"],
+        "path": "/"
+    }
+    response.delete_cookie(
+        key=CSRF_TOKEN_NAME,
+        **csrf_options
+    )

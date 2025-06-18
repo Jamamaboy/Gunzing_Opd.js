@@ -20,38 +20,69 @@ from api.endpoints.evidence import router as evidence_router
 from api.endpoints.defendant import router as defendant_router
 from api.endpoints.statistic import router as statistic_router
 from config.logging_config import setup_logging
+import os
+from dotenv import load_dotenv
 
 # Setup logging
 logger = setup_logging()
 
 app = FastAPI()
 
-# Log application startup
-logger.info("Starting FastAPI application")
+# ตรวจสอบ environment
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+IS_PRODUCTION = ENVIRONMENT.lower() == "production"
 
-# Configure CORS - modified to support cookies
-app.add_middleware(
-    CORSMiddleware,
-    # Include all possible frontend origins
-    allow_origins=[
+# กำหนด allowed origins ตาม environment
+if IS_PRODUCTION:
+    allowed_origins = [
+        "http://localhost",      # สำหรับ local container
+        "http://localhost:80",   # สำหรับ local container
+        "http://frontend:80",    # สำหรับ container network
+        "http://frontend"        # สำหรับ container network
+    ]
+else:
+    allowed_origins = [
         "http://localhost:5173",
         "http://localhost:3000",
-        "http://localhost:8080",
-        "http://localhost",
-        "http://localhost:80",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:8080",
-        "http://frontend:5173",
-        "http://ai-inference-service:8080",
-        "https://vz1gzb52-5173.asse.devtunnels.ms",
-        "https://vz1gzb52-4173.asse.devtunnels.ms/",
-        "https://frontend.ashyisland-0d4cc8a1.australiaeast.azurecontainerapps.io"
-    ],
-    allow_credentials=True,
+        "http://frontend:5173"
+    ]
+
+# ตั้งค่า CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,  # สำคัญ: ต้องเป็น True เพื่อให้ส่ง cookies
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
+
+# ตั้งค่า cookie middleware
+@app.middleware("http")
+async def add_cookie_middleware(request, call_next):
+    response = await call_next(request)
+    
+    # ตรวจสอบว่ามี cookie ที่ต้องการเพิ่มหรือไม่
+    if "Set-Cookie" in response.headers:
+        cookies = response.headers.getlist("Set-Cookie")
+        new_cookies = []
+        
+        for cookie in cookies:
+            # ตั้งค่าเหมือน production
+            if "SameSite" not in cookie:
+                cookie += "; SameSite=None"
+            if "Secure" not in cookie:
+                cookie += "; Secure"
+            
+            new_cookies.append(cookie)
+        
+        # อัพเดท cookies ใน response
+        response.headers["Set-Cookie"] = ", ".join(new_cookies)
+    
+    return response
+
+# Log application startup
+logger.info("Starting FastAPI application")
 
 # Include all routers
 app.include_router(province_router, prefix="/api")
@@ -78,6 +109,10 @@ app.include_router(statistic_router, prefix="/api")
 async def health_check():
     logger.info("Health check endpoint called")
     return {"status": "healthy"}
+
+@app.get("/")
+async def root():
+    return {"message": "AI Detection API is running"}
 
 if __name__ == "__main__":
     import uvicorn

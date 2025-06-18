@@ -18,3 +18,4 @@ asyncpg
 shapely
 geoalchemy2
 pgvector
+pydantic-settings

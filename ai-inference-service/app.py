@@ -10,20 +10,6 @@ from core.logging_config import setup_logging
 # Setup logging
 logger = setup_logging()
 
-# Log environment and paths
-logger.info(f"Current working directory: {os.getcwd()}")
-logger.info(f"Model path: {settings.MODEL_PATH}")
-logger.info(f"Object detection model path: {settings.OBJECT_DETECTION_MODEL}")
-logger.info(f"Pill model path: {settings.PILL_MODEL}")
-logger.info(f"Pill prototypes path: {settings.PILL_PROTOTYPES}")
-
-# Verify model files exist
-for model_path in [settings.OBJECT_DETECTION_MODEL, settings.PILL_MODEL, settings.PILL_PROTOTYPES]:
-    if os.path.exists(model_path):
-        logger.info(f"Model file exists: {model_path}")
-    else:
-        logger.error(f"Model file not found: {model_path}")
-
 app = FastAPI(
     title="Evidence Analysis ML Service",
     description="API for evidence analysis using machine learning",

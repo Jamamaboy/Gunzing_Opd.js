@@ -4,26 +4,29 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 from typing import Dict, Any
 import logging
 import time
+from core.config import get_ai_service_url
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["inference"])
-
-ML_SERVICE_URL = "https://ai-inference-service--qfsm91q.ashyisland-0d4cc8a1.australiaeast.azurecontainerapps.io"
 
 @router.post("/analyze", response_model=Dict[str, Any])
 async def analyze_image(image: UploadFile = File(...)):
     """
     ส่งรูปภาพไปวิเคราะห์ด้วย AI Inference Service
     """
+    # Get AI service URL from config
+    ai_service_url = get_ai_service_url()
+    
     start_time = time.time()
     logger.info(f"Starting image analysis for file: {image.filename}")
+    logger.info(f"Using AI service URL: {ai_service_url}")
     
     try:
         file_content = await image.read()
         logger.info(f"File read completed. Size: {len(file_content)} bytes")
         
         async with httpx.AsyncClient(timeout=30.0) as client:
-            logger.info(f"Preparing request to AI service at: {ML_SERVICE_URL}")
+            logger.info(f"Preparing request to AI service at: {ai_service_url}")
             
             headers = {
                 "Accept": "application/json",
@@ -33,7 +36,7 @@ async def analyze_image(image: UploadFile = File(...)):
             logger.info("Sending request to AI service...")
             try:
                 response = await client.post(
-                    f"{ML_SERVICE_URL}/api/analyze",
+                    f"{ai_service_url}/api/analyze",
                     files={"image": (image.filename, file_content)},
                     headers=headers,
                     timeout=30.0

@@ -34,10 +34,10 @@ from schemas.narcotic import (
 from services.exhibit_service import get_exhibit_by_id
 from services.narcotic_service import NarcoticService
 from pgvector.sqlalchemy import Vector
+from core.config import get_ml_service_url
 
 
 router = APIRouter(tags=["narcotics"])
-ml_service_url = os.environ.get("ML_SERVICE_URL", "https://ai-inference-service--qfsm91q.ashyisland-0d4cc8a1.australiaeast.azurecontainerapps.io")
 
 async def run_sync_to_async(func, *args, **kwargs):
     """Run a synchronous function in an asynchronous way"""
@@ -418,6 +418,9 @@ async def create_image_vector_dataform(
     """
     Create and store a vector representation for an existing narcotic image using form data
     """
+    # Get ML service URL from config
+    ml_service_url = get_ml_service_url()
+    
     # 1. ตรวจสอบว่า narcotic และ image มีอยู่จริง
     db_narcotic = await NarcoticService.get_narcotic(db, narcotic_id)
     if not db_narcotic:
@@ -523,6 +526,9 @@ async def upload_and_vectorize_image(
     """
     API endpoint that matches the frontend pattern - upload image and create vector
     """
+    # Get ML service URL from config
+    ml_service_url = get_ml_service_url()
+    
     # 1. ตรวจสอบว่า narcotic มีอยู่จริง
     db_narcotic = await NarcoticService.get_narcotic(db, narcotic_id)
     if not db_narcotic:
@@ -619,8 +625,11 @@ async def search_similar_narcotics(
     """
     Search for similar narcotics based on a query image using SQLAlchemy ORM
     """
+    # Get ML service URL from config
+    ml_service_url = get_ml_service_url()
+    
     try:
-        # 1. สร้าง vector จากรูปภาพค้นหา (คงเดิม)
+        # 1. สร้าง vector จากรูปภาพค้นหา
         file_content = await file.read()
         file.file.seek(0)
         

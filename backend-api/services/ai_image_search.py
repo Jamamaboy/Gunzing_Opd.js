@@ -4,11 +4,11 @@ import json
 import numpy as np
 from io import BytesIO
 from fastapi import UploadFile, HTTPException
-import os
+from core.config import get_ml_service_url
 
 class AIImageSearchService:
     def __init__(self):
-        self.ai_service_url = os.environ.get("ML_SERVICE_URL", "https://ai-inference-service--qfsm91q.ashyisland-0d4cc8a1.australiaeast.azurecontainerapps.io")
+        self.ai_service_url = get_ml_service_url()
     
     async def segment_drug_image(self, file: UploadFile):
         """ทำ segmentation เพื่อแยกส่วนที่เป็นยาเสพติด"""

@@ -1,9 +1,3 @@
-/**
- * SessionManager.js
- * จัดการกับ Navigation Cycle ของแอปพลิเคชัน
- * /imagePreview → /candidateShow → /evidenceProfile → /evidenceProfile/save-to-record
- */
-
 import { v4 as uuidv4 } from 'uuid';
 
 // กำหนดหน้าที่อยู่ใน cycle

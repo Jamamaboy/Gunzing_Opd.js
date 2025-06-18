@@ -4,4 +4,4 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE EXTENSION IF NOT EXISTS vector;
 
 -- ตั้งค่าสำหรับภาษาไทย
-ALTER DATABASE raven_db SET client_encoding TO 'UTF8';
+ALTER DATABASE ai_detection SET client_encoding TO 'UTF8';

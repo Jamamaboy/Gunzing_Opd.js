@@ -36,16 +36,21 @@ export const SessionProvider = ({ children }) => {
     
     // 1. ถ้าอยู่ในหน้าแรกของ cycle ให้สร้าง session ใหม่
     if (isInitialCyclePage(currentPath)) {
-      // ถ้าเป็นหน้าแรกของ cycle ให้สร้าง session ใหม่เสมอ
       const newSessionId = createSession();
       setSessionId(newSessionId);
       setLastValidPath(currentPath);
+      // เก็บ sessionId ใน sessionStorage
+      sessionStorage.setItem('currentSessionId', newSessionId);
     } 
-    // 2. ถ้าอยู่ในหน้าอื่นๆ ของ cycle แต่ไม่มี session ให้ redirect ไปยังหน้าแรก
-    else if (isInCycle(currentPath) && !hasValidSession()) {
-      // ถ้าพยายามเข้าถึงหน้าใน cycle โดยไม่มี session
-      // ให้ redirect ไปที่หน้าแรกของ cycle
-      navigate(getInitialCyclePath(), { replace: true });
+    // 2. ถ้าอยู่ในหน้าอื่นๆ ของ cycle แต่ไม่มี session ให้ดึงจาก sessionStorage
+    else if (isInCycle(currentPath)) {
+      const storedSessionId = sessionStorage.getItem('currentSessionId');
+      if (storedSessionId) {
+        setSessionId(storedSessionId);
+        setLastValidPath(currentPath);
+      } else if (!hasValidSession()) {
+        navigate(getInitialCyclePath(), { replace: true });
+      }
     }
     // 3. ถ้าอยู่ในหน้าของ cycle และมี session อยู่แล้ว ให้บันทึก path ปัจจุบันไว้
     else if (isInCycle(currentPath) && hasValidSession()) {
@@ -56,6 +61,7 @@ export const SessionProvider = ({ children }) => {
       clearSession();
       setSessionId(null);
       setLastValidPath(null);
+      sessionStorage.removeItem('currentSessionId');
     }
   }, [location.pathname, navigate]);
 

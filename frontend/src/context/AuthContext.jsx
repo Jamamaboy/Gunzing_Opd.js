@@ -16,14 +16,22 @@ const AuthProvider = ({ children }) => {
   // ตรวจสอบว่ามีการ authenticate แล้วหรือยัง
   const checkAuth = async () => {
     try {
-      // ใช้ Axios instance แทน fetch API
+      console.log("=== Authentication Check ===");
+      
+      // ตรวจสอบ CSRF token
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrf_token='))
+        ?.split('=')[1];
+      
+      console.log("CSRF Token exists:", !!csrfToken);
+      
+      // ตรวจสอบ token กับ backend
       const response = await api.get('/api/auth/user');
-
-      // Axios จะใส่ข้อมูลการตอบกลับใน response.data
       setUser(response.data);
       setIsAuthenticated(true);
       
-      // เก็บข้อมูล user ใน localStorage สำหรับ offline mode (ไม่เก็บข้อมูลละเอียด)
+      // เก็บข้อมูล user ใน localStorage
       const safeUserData = {
         user_id: response.data.user_id,
         firstname: response.data.firstname,
@@ -38,8 +46,35 @@ const AuthProvider = ({ children }) => {
       return true;
     } catch (error) {
       console.error('Auth check error:', error);
-      // ถ้า network error หรือ 401 error ลองใช้ข้อมูลจาก localStorage แทน
-      handleOfflineMode();
+      
+      if (error.response?.status === 401) {
+        // ลอง refresh token ก่อน
+        try {
+          console.log('Attempting to refresh token...');
+          const refreshResponse = await api.post('/api/auth/refresh');
+          if (refreshResponse.data.success) {
+            console.log('Token refresh successful');
+            
+            // เก็บ CSRF token ใหม่
+            if (refreshResponse.data.csrf_token) {
+              document.cookie = `csrf_token=${refreshResponse.data.csrf_token}; path=/`;
+              console.log('New CSRF token saved to cookie');
+            }
+            
+            const userResponse = await api.get('/api/auth/user');
+            setUser(userResponse.data);
+            setIsAuthenticated(true);
+            return true;
+          }
+        } catch (refreshError) {
+          console.error('Token refresh failed:', refreshError);
+        }
+        
+        // ถ้า refresh ไม่สำเร็จ ให้ logout
+        logout();
+      } else {
+        handleOfflineMode();
+      }
       return false;
     } finally {
       setLoading(false);
@@ -60,13 +95,15 @@ const AuthProvider = ({ children }) => {
         const daysDiff = Math.floor((now - lastAuth) / (1000 * 60 * 60 * 24));
         
         if (daysDiff <= 7) {
+          console.log("Using offline mode - valid cached user data");
           setUser(parsedUser);
           setIsAuthenticated(true);
         } else {
-          // ล้างข้อมูลที่เก่าเกิน 7 วัน
+          console.log("Cached user data too old - clearing");
           logout();
         }
       } else {
+        console.log("No cached user data available");
         setIsAuthenticated(false);
         setUser(null);
       }
@@ -81,18 +118,21 @@ const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     setLoading(true);
     try {
+      console.log("=== Login Attempt ===");
+      console.log("Email:", email);
+      console.log("API URL:", API_URL);
+      
       const formData = new URLSearchParams();
       formData.append('username', email);
       formData.append('password', password);
 
-      // ใช้ Axios instance แทน fetch API
       const response = await api.post('/api/auth/login', formData.toString(), {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         }
       });
 
-      // Axios จะใส่ข้อมูลการตอบกลับใน response.data
+      console.log("Login response:", response.data);
       const data = response.data;
       setUser(data.user);
       setIsAuthenticated(true);
@@ -104,13 +144,10 @@ const AuthProvider = ({ children }) => {
       };
       localStorage.setItem('user_data', JSON.stringify(safeUserData));
       
-      // เก็บ token ในที่เดียว
-      if (data.access_token) {
-        localStorage.setItem('access_token', data.access_token);
-        // ลบ token เก่าที่อาจจะเหลืออยู่
-        localStorage.removeItem('token');
-        sessionStorage.removeItem('token');
-        console.log('Token saved to localStorage');
+      // เก็บ CSRF token
+      if (data.csrf_token) {
+        document.cookie = `csrf_token=${data.csrf_token}; path=/`;
+        console.log('CSRF token saved to cookie');
       }
       
       return { success: true };
@@ -129,7 +166,6 @@ const AuthProvider = ({ children }) => {
   const logout = async () => {
     setLoading(true);
     try {
-      // ใช้ Axios instance แทน fetch API
       await api.post('/api/auth/logout');
     } catch (error) {
       console.error('Logout error:', error);

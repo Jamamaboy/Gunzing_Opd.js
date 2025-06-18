@@ -4,12 +4,11 @@ from fastapi import UploadFile, HTTPException
 from typing import Dict, Any, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
-
-AI_SERVICE_URL = os.environ.get("AI_SERVICE_URL", "https://ai-inference-service--qfsm91q.ashyisland-0d4cc8a1.australiaeast.azurecontainerapps.io")
+from core.config import get_ai_service_url
 
 class AIService:
-    def __init__(self, base_url: str = AI_SERVICE_URL):
-        self.base_url = base_url
+    def __init__(self):
+        self.base_url = get_ai_service_url()
         self.timeout = 60
 
     async def analyze_evidence(self, file: UploadFile, db: AsyncSession = None) -> Dict[str, Any]:

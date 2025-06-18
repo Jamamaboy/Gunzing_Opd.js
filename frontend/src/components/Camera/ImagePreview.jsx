@@ -142,8 +142,6 @@ const ImagePreview = () => {
         } catch (resizeError) {
           console.error("Error resizing image:", resizeError);
         }
-      } else {
-        console.log("Image is small enough, no resize needed");
       }
       
       let blob;
@@ -171,80 +169,109 @@ const ImagePreview = () => {
         
         clearTimeout(timeoutId);
         
-        console.log("Analyze Response:", response.status);
+        console.log("=== API Response Analysis ===");
+        console.log("Response status:", response.status);
+        console.log("Response data:", response.data);
         
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error("API Error:", errorData);
+        if (!response.data) {
+          console.error("No response data");
           navigateToUnknownObject();
           return;
         }
         
         const result = response.data;
-        console.log("Analysis result:", result);
+        console.log("=== Processing Result ===");
+        console.log("Result:", result);
+        console.log("Detection type:", result.detectionType);
+        console.log("Detected objects:", result.detected_objects);
         
-        const isValidResult = result && 
-          (result.detected_objects || result.detections || result.prediction || result.details);
-        
-        if (!isValidResult) {
-          console.error("Invalid result structure:", result);
-          navigateToUnknownObject();
-          return;
-        }
-        
-        if (result && result.detectionType === 'narcotic' && 
-            result.detected_objects && result.detected_objects.length > 0) {
-
-          console.log("Drug object structure:", JSON.stringify(result.detected_objects[0]));
+        // ตรวจสอบว่าเป็นอาวุธปืนหรือไม่
+        if (result.detectionType === 'firearm' && result.detected_objects) {
+          console.log("=== Processing Firearm Data ===");
           
-          const drugObject = result.detected_objects[0];
+          // สร้าง brandData จาก detected_objects
+          const brands = {};
+          const gunClasses = ['BigGun', 'Pistol', 'Revolver'];
           
-          let vectorData = null;
-          
-          if (drugObject.vector) {
-            console.log("Vector found in drugObject.vector", drugObject.vector.length);
-            vectorData = drugObject.vector;
-          } else if (drugObject.vector_info && drugObject.vector_info.vector) {
-            console.log("Vector found in vector_info.vector", drugObject.vector_info.vector.length);
-            vectorData = drugObject.vector_info.vector;
-          } else if (drugObject.vector_base64) {
-            // เพิ่มเงื่อนไขสำหรับ vector_base64
-            console.log("Vector base64 found, searching with it directly");
-            try {
-              // ค้นหายาเสพติดโดยใช้ vector_base64 โดยตรง
-              const similarNarcotics = await findSimilarNarcoticsWithBase64(drugObject.vector_base64);
-              console.log("Similar narcotics:", similarNarcotics);
+          result.detected_objects.forEach(detection => {
+            console.log("Processing detection:", detection);
+            
+            if (gunClasses.includes(detection.class) && detection.brand_top3) {
+              console.log("Found gun with brand data:", detection.brand_top3);
               
-              if (similarNarcotics && similarNarcotics.length > 0) {
-                result.similarNarcotics = similarNarcotics;
-                result.drugCandidates = prepareSimilarNarcoticsForDisplay(similarNarcotics);
-                console.log("Added similar narcotics to result");
-              }
-            } catch (error) {
-              console.error("Error finding similar narcotics with base64:", error);
-            }
-          } else {
-            console.log("No vector data found in drug object");
-            console.log("Available fields:", Object.keys(drugObject));
-          }
-          
-          // ดำเนินการต่อเฉพาะเมื่อ
-          if (vectorData) {
-            try {
-              // ค้นหายาเสพติดที่คล้ายคลึงกันด้วย vector array
-              console.log("Searching for similar narcotics...");
-              const similarNarcotics = await findSimilarNarcotics(vectorData);
-              console.log("Similar narcotics:", similarNarcotics);
+              // จำกัดจำนวน brand ที่แสดง
+              const limitedBrandTop3 = detection.brand_top3.slice(0, 3);
               
-              if (similarNarcotics && similarNarcotics.length > 0) {
-                result.similarNarcotics = similarNarcotics;
-                result.drugCandidates = prepareSimilarNarcoticsForDisplay(similarNarcotics);
-                console.log("Added similar narcotics to result");
-              }
-            } catch (error) {
-              console.error("Error finding similar narcotics:", error);
+              limitedBrandTop3.forEach(brand => {
+                if (brand.confidence > 0) {
+                  if (!brands[brand.label]) {
+                    brands[brand.label] = {
+                      name: brand.label,
+                      confidence: brand.confidence,
+                      models: []
+                    };
+                  }
+                  
+                  // เพิ่ม models ถ้ามี
+                  if (detection.model_top3 && detection.brand_top3[0]?.label === brand.label) {
+                    const limitedModelTop3 = detection.model_top3.slice(0, 3);
+                    limitedModelTop3.forEach(model => {
+                      if (model.confidence > 0) {
+                        brands[brand.label].models.push({
+                          name: model.label,
+                          confidence: model.confidence,
+                          brandName: brand.label
+                        });
+                      }
+                    });
+                  }
+                }
+              });
             }
-          }
+          });
+          
+          console.log("=== Processed Brands ===");
+          console.log("Brands object:", brands);
+          
+          // แปลง brands object เป็น array และเรียงตามความมั่นใจ
+          const brandArray = Object.values(brands)
+            .filter(brand => brand.models.length > 0) // เฉพาะ brand ที่มี model
+            .sort((a, b) => b.confidence - a.confidence)
+            .slice(0, 3);
+          
+          console.log("=== Final Brand Array ===");
+          console.log("Brand array:", brandArray);
+          
+          // เพิ่ม result.brandData เพื่อให้ CandidateShow ใช้งานได้
+          result.brandData = brandArray;
+          
+          // สร้าง flat candidates list
+          const flatCandidates = [];
+          brandArray.forEach(brand => {
+            brand.models.forEach(model => {
+              flatCandidates.push({
+                label: `${brand.name} ${model.name}`,
+                confidence: model.confidence,
+                brandName: brand.name,
+                modelName: model.name
+              });
+            });
+          });
+          
+          // เพิ่มตัวเลือก Unknown
+          flatCandidates.push({
+            label: 'อาวุธปืนไม่ทราบชนิด',
+            confidence: 0,
+            brandName: 'Unknown',
+            modelName: 'Unknown',
+            isUnknownWeapon: true
+          });
+          
+          result.candidates = flatCandidates;
+          
+          console.log("=== Final Result for Navigation ===");
+          console.log("brandData:", result.brandData);
+          console.log("candidates:", result.candidates);
         }
         
         localStorage.setItem('analysisResult', JSON.stringify(result));
@@ -258,6 +285,7 @@ const ImagePreview = () => {
             sourcePath: location.state?.sourcePath || -1
           } 
         });
+        
       } catch (fetchError) {
         console.error("Fetch error:", fetchError);
         if (fetchError.name === 'AbortError') {

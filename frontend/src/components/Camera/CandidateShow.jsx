@@ -126,16 +126,17 @@ const CandidateShow = () => {
 
   useEffect(() => {
     if (location.state) {
-      console.log("==== DEBUG ====");
+      console.log("=== CandidateShow DEBUG ===");
       console.log("Location state:", location.state);
       
       const { analysisResult, result, image, fromCamera, sourcePath } = location.state;
       const data = analysisResult || result || {};
       
-      console.log("Data:", data);
+      console.log("Data received:", data);
       console.log("Detection type:", data.detectionType);
-      console.log("Similar narcotics:", data.similarNarcotics);
-      console.log("Drug candidates:", data.drugCandidates);
+      console.log("Brand data:", data.brandData);
+      console.log("Candidates:", data.candidates);
+      console.log("Detected objects:", data.detected_objects);
       
       setImageUrl(image || localStorage.getItem('analysisImage'));
       setFromCamera(fromCamera || false);
@@ -213,161 +214,15 @@ const CandidateShow = () => {
       } 
       else if (data.detectionType === 'firearm' || data.detectionType === 'Gun' || 
                data.detectionType === 'weapon' || data.brandData) {
+        console.log("=== Processing Gun Data ===");
         setDetectionType('Gun');
         
-        if (data.detected_objects || data.detections) {
-          const detections = data.detected_objects || data.detections || [];
-          
-          const allZeroConfidence = detections.length === 0 || 
-            detections.every(detection => {
-              if (detection.confidence !== undefined && detection.confidence > 0) {
-                return false;
-              }
-              
-              if (detection.brand_top3 && detection.brand_top3.length > 0) {
-                const hasBrandConfidence = detection.brand_top3.some(brand => 
-                  brand.confidence > 0
-                );
-                if (hasBrandConfidence) return false;
-              }
-              
-              if (detection.model_top3 && detection.model_top3.length > 0) {
-                const hasModelConfidence = detection.model_top3.some(model => 
-                  model.confidence > 0
-                );
-                if (hasModelConfidence) return false;
-              }
-              
-              return true;
-            });
-          
-          if (allZeroConfidence) {
-            setIsUnknownObject(true);
-            setDetectionType('Unknown');
-            setCandidates([{
-              label: 'วัตถุพยานที่ไม่รู้จัก',
-              confidence: 0,
-              isUnknown: true,
-              exhibit_id: UNKNOWN_EXHIBIT_IDS.UNKNOWN_OBJECT // null - สร้างใหม่
-            }]);
-          } else {
-            setDetectionType('Gun');
-
-            const gunClasses = ['BigGun', 'Pistol', 'Revolver'];
-
-            if (detections.length > 0 && detections[0].brand_top3) {
-              const brands = {};
-              detections.forEach(detection => {
-                if (gunClasses.includes(detection.class) && detection.brand_top3) {
-                  const limitedBrandTop3 = detection.brand_top3.slice(0, 3);
-                  limitedBrandTop3.forEach(brand => {
-                    if (brand.confidence > 0) {
-                      if (!brands[brand.label]) {
-                        brands[brand.label] = {
-                          name: brand.label,
-                          confidence: brand.confidence,
-                          models: []
-                        };
-                      }
-                      // Add models if they exist for this brand
-                      if (detection.model_top3 && detection.brand_top3[0]?.label === brand.label) {
-                        // จำกัดจำนวน Model ให้แสดงไม่เกิน 3
-                        const limitedModelTop3 = detection.model_top3.slice(0, 3);
-                        limitedModelTop3.forEach(model => {
-                          if (model.confidence > 0) {
-                            brands[brand.label].models.push({
-                              name: model.label,
-                              confidence: model.confidence,
-                              brandName: brand.label
-                            });
-                          }
-                        });
-                      }
-                    }
-                  });
-                }
-              });
-
-              // *** เพิ่ม filter เฉพาะ brand ที่มี models ที่ความมั่นใจ > 0 ***
-              const filteredBrands = Object.values(brands).filter(brand => brand.models.length > 0);
-
-              // Convert to array and sort by confidence
-              const sortedBrands = filteredBrands
-                .sort((a, b) => b.confidence - a.confidence)
-                .map(brand => ({
-                  ...brand,
-                  models: brand.models.sort((a, b) => b.confidence - a.confidence)
-                }))
-                .slice(0, 3);
-              
-              // Create Unknown brand/model option
-              const unknownBrand = {
-                name: 'Unknown',
-                confidence: 0,
-                models: [{
-                  name: 'Unknown',
-                  confidence: 0,
-                  brandName: 'Unknown'
-                }]
-              };
-              
-              // Add Unknown brand to brandData
-              setBrandData([...sortedBrands, unknownBrand]);
-
-              // Also create flat list for selection
-              const flatCandidates = [];
-              sortedBrands.forEach(brand => {
-                if (brand.models.length > 0) {
-                  // จำกัดจำนวน Model ให้แสดงไม่เกิน 3
-                  const limitedModels = brand.models.slice(0, 3);
-                  
-                  limitedModels.forEach(model => {
-                    flatCandidates.push({
-                      label: `${brand.name} ${model.name}`,
-                      confidence: model.confidence,
-                      brandName: brand.name,
-                      modelName: model.name
-                    });
-                  });
-                }
-              });
-              
-              // Add Unknown gun option as the last choice
-              flatCandidates.push({
-                label: 'อาวุธปืนไม่ทราบชนิด',
-                confidence: 0,
-                brandName: 'Unknown',
-                modelName: 'Unknown',
-                isUnknownWeapon: true,
-                exhibit_id: UNKNOWN_EXHIBIT_IDS.UNKNOWN_GUN // อ้างอิง exhibit ID 93
-              });
-              
-              setCandidates(flatCandidates);
-            } else {
-              // Fall back to original format
-              const formattedCandidates = detections.map(detection => ({
-                label: detection.class,
-                confidence: detection.confidence
-              }));
-              
-              // Add Unknown gun option as the last choice
-              formattedCandidates.push({
-                label: 'อาวุธปืนประเภทไม่ทราบชนิด',
-                confidence: 0,
-                isUnknownWeapon: true,
-                id: 21
-              });
-              
-              setCandidates(formattedCandidates);
-            }
-          }
-        }
-        // สร้าง brandData ถ้ามี brandData ใน data - จากไฟล์ CandidateShow.jsx
-        else if (data.brandData && Array.isArray(data.brandData)) {
-          console.log("Setting brandData from API response");
+        // ตรวจสอบ brandData ก่อน
+        if (data.brandData && Array.isArray(data.brandData) && data.brandData.length > 0) {
+          console.log("Using brandData from result:", data.brandData);
           setBrandData(data.brandData);
           
-          // สร้าง candidates เพื่อให้สอดคล้องกับ brandData
+          // สร้าง flat candidates
           const flatCandidates = [];
           data.brandData.forEach(brand => {
             if (brand.models && brand.models.length > 0) {
@@ -382,74 +237,58 @@ const CandidateShow = () => {
             }
           });
           
-          // Add Unknown gun option
           flatCandidates.push({
             label: 'อาวุธปืนไม่ทราบชนิด',
             confidence: 0,
             brandName: 'Unknown',
             modelName: 'Unknown',
-            isUnknownWeapon: true,
-            id: 21
+            isUnknownWeapon: true
           });
           
+          console.log("Setting flat candidates:", flatCandidates);
           setCandidates(flatCandidates);
         }
-        // ถ้าไม่มี brandData แต่มี candidates ให้สร้าง brandData จาก candidates
-        else if (data.candidates && Array.isArray(data.candidates)) {
-          console.log("Creating brandData from candidates");
+        // ตรวจสอบ candidates ที่ส่งมาตรงๆ
+        else if (data.candidates && Array.isArray(data.candidates) && data.candidates.length > 0) {
+          console.log("Using candidates from result:", data.candidates);
+          setCandidates(data.candidates);
           
-          // สร้าง brandData ชั่วคราว
-          const tempBrandData = [];
+          // สร้าง brandData จาก candidates
           const brandMap = {};
-          
-          // จัดกลุ่ม candidates ตาม brand
           data.candidates.forEach(candidate => {
-            if (candidate.brandName) {
+            if (candidate.brandName && candidate.brandName !== 'Unknown') {
               if (!brandMap[candidate.brandName]) {
                 brandMap[candidate.brandName] = {
                   name: candidate.brandName,
-                  confidence: candidate.brandConfidence || 0,
+                  confidence: candidate.confidence,
                   models: []
                 };
-                tempBrandData.push(brandMap[candidate.brandName]);
               }
               
               if (candidate.modelName) {
                 brandMap[candidate.brandName].models.push({
                   name: candidate.modelName,
-                  confidence: candidate.confidence || 0
+                  confidence: candidate.confidence
                 });
               }
             }
           });
           
-          // เพิ่ม Unknown brand ถ้ามี candidate ที่เป็น unknown
-          if (data.candidates.some(c => c.isUnknownWeapon)) {
-            tempBrandData.push({
-              name: "Unknown",
-              confidence: 0,
-              models: []
-            });
-          }
-          
-          setBrandData(tempBrandData);
-          setCandidates(data.candidates);
+          const brandArray = Object.values(brandMap);
+          console.log("Created brandData from candidates:", brandArray);
+          setBrandData(brandArray);
         }
-        // ถ้าไม่มีข้อมูลเพียงพอ สร้าง brandData เปล่า
+        // ถ้าไม่มีข้อมูล brand/model ให้แสดงเป็น Unknown
         else {
-          setBrandData([]);
-          
-          // สร้าง candidates สำหรับอาวุธปืน
-          const weaponCandidates = [{
-            label: 'อาวุธปืนประเภทไม่ทราบชนิด',
+          console.log("No brand/model data found, setting as unknown weapon");
+          setCandidates([{
+            label: 'อาวุธปืนไม่ทราบชนิด',
             confidence: 0,
             brandName: 'Unknown',
             modelName: 'Unknown',
-            isUnknownWeapon: true,
-            id: 21
-          }];
-          
-          setCandidates(weaponCandidates);
+            isUnknownWeapon: true
+          }]);
+          setBrandData([]);
         }
       } else {
         // No detection data - handle as unknown object
@@ -463,7 +302,7 @@ const CandidateShow = () => {
         }]);
       }
     }
-  }, [location.state]);
+  }, [location.state, navigate]);
 
   useEffect(() => {
     console.log("detectionType changed to:", detectionType);

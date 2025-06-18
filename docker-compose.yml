@@ -1,53 +1,63 @@
-version: '3'
+version: '3.8'
 
 services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      dockerfile: Dockerfile
     ports:
-      - "5173:5173"
-    environment:
-      - VITE_API_URL=http://localhost:8000
+      - "80:80"
     depends_on:
       - backend-api
-    
+    networks:
+      - app-network
+
   backend-api:
-    image: backend-api:complete
-    volumes:
-      - ./backend-api:/app
+    build:
+      context: ./backend-api
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://postgres:password@db-service:5432/raven_db
-      - ML_SERVICE_URL=http://ai-inference-service:8080
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/ai_detection
+      - UPLOAD_DIR=/app/uploads
+      - AI_SERVICE_URL=http://ai-inference:8080
+    volumes:
+      - ./backend-api/uploads:/app/uploads
     depends_on:
-      - db-service
-      - ai-inference-service
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-    
-  ai-inference-service:
-    image: ai-inference-service:complete
+      - db
+      - ai-inference
+    networks:
+      - app-network
+
+  ai-inference:
+    build:
+      context: ./ai-inference-service
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
     volumes:
-      - ./ai-inference-service:/app
       - ./ai-inference-service/model:/app/model
-    command: python -m uvicorn app:app --host 0.0.0.0 --port 8080 --reload
+      - ./ai-inference-service/logs:/app/logs
+    networks:
+      - app-network
 
-  db-service:
-    image: postgis-with-pgvector:17
+  db:
+    image: postgres:15
     environment:
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=raven_db
-      - POSTGRES_INITDB_ARGS=--encoding=UTF8 --locale=C.UTF-8
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=ai_detection
+    ports:
+      - "5432:5432"
     volumes:
-      - ./postgres/data:/var/lib/postgresql/data
-      - ./postgres/init-extensions.sql:/docker-entrypoint-initdb.d/init-extensions.sql
-      - ./postgres/exports:/exports
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   postgres_data:
