@@ -6,29 +6,45 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.routes import inference, narcotic, vector
 from core.config import settings
 from core.logging_config import setup_logging
+from ml_managers.ai_model_manager import get_model_manager  # Add this import
 
 # Setup logging
 logger = setup_logging()
-
-# Log environment and paths
-logger.info(f"Current working directory: {os.getcwd()}")
-logger.info(f"Model path: {settings.MODEL_PATH}")
-logger.info(f"Object detection model path: {settings.OBJECT_DETECTION_MODEL}")
-logger.info(f"Pill model path: {settings.PILL_MODEL}")
-logger.info(f"Pill prototypes path: {settings.PILL_PROTOTYPES}")
-
-# Verify model files exist
-for model_path in [settings.OBJECT_DETECTION_MODEL, settings.PILL_MODEL, settings.PILL_PROTOTYPES]:
-    if os.path.exists(model_path):
-        logger.info(f"Model file exists: {model_path}")
-    else:
-        logger.error(f"Model file not found: {model_path}")
 
 app = FastAPI(
     title="Evidence Analysis ML Service",
     description="API for evidence analysis using machine learning",
     version="1.0.0"
 )
+
+# Add this startup event
+@app.on_event("startup")
+async def startup_event():
+    logger.info("🚀 Loading AI models on startup...")
+    try:
+        model_manager = get_model_manager()
+
+        # Check if models are loaded
+        if model_manager.get_segmentation_model() is not None:
+            logger.info("✅ Segmentation model loaded successfully")
+        else:
+            logger.error("❌ Segmentation model failed to load")
+
+        if model_manager.get_brand_model() is not None:
+            logger.info("✅ Brand model loaded successfully")
+        else:
+            logger.error("❌ Brand model failed to load")
+
+        if model_manager.get_narcotic_model() is not None:
+            logger.info("✅ Narcotic model loaded successfully")
+        else:
+            logger.error("❌ Narcotic model failed to load")
+
+        logger.info("🎯 Model loading complete")
+
+    except Exception as e:
+        logger.error(f"💥 Error loading models on startup: {e}")
+        raise e
 
 # Log application startup
 logger.info("Starting AI Inference Service")
@@ -41,6 +57,7 @@ app.add_middleware(
         "https://backend.ashyisland-0d4cc8a1.australiaeast.azurecontainerapps.io",
         "http://localhost:3000",  # สำหรับ local development
         "http://localhost:8000"   # สำหรับ local development
+        "http://localhost:5173"
     ],
     allow_credentials=True,
     allow_methods=["*"],
