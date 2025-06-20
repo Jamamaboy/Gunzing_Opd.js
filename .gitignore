@@ -79,8 +79,15 @@ logs
 *.h5
 *.pkl
 *.joblib
+*.pt
+*.pth
+*.onnx
+*.pb
+*.bin
+*.safetensors
 models/weights/
 models/checkpoints/
+ai-inference-service/model/
 data/raw/
 data/processed/
 wandb/
