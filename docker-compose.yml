@@ -14,7 +14,7 @@ services:
       - VITE_API_URL=http://localhost:8000
     depends_on:
       - backend-api
-    
+
   backend-api:
     image: backend-api:complete
     volumes:
@@ -28,7 +28,7 @@ services:
       - db-service
       - ai-inference-service
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-    
+
   ai-inference-service:
     image: ai-inference-service:complete
     ports:

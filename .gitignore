@@ -75,25 +75,6 @@ logs
 # Docker
 .dockerignore
 
-# AI/ML specific
-*.h5
-*.pkl
-*.joblib
-*.pt
-*.pth
-*.onnx
-*.pb
-*.bin
-*.safetensors
-models/weights/
-models/checkpoints/
-ai-inference-service/model/
-data/raw/
-data/processed/
-wandb/
-mlruns/
-.neptune/
-
 # Temporary files
 tmp/
 temp/
@@ -125,3 +106,32 @@ dmypy.json
 
 # Azure specific
 .azure/
+
+# AI/ML specific large files
+*.h5
+*.pkl
+*.joblib
+*.pt
+*.pth
+*.onnx
+*.pb
+*.tflite
+*.bin
+*.safetensors
+*.model
+*.weights
+
+# Model directories
+model/
+Model*/
+models/
+weights/
+checkpoints/
+ai-inference-service/model/
+ai-inference-service/venv311/
+
+# Large data files
+*.npy
+*.npz
+data/
+datasets/

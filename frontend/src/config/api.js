@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL = "https://backend.ashyisland-0d4cc8a1.australiaeast.azurecontainerapps.io";
+// const API_URL = "https://backend.ashyisland-0d4cc8a1.australiaeast.azurecontainerapps.io";
+const API_URL = "http://localhost:8080";
 
 // ตรวจสอบว่ากำลังทำงานบน HTTPS หรือไม่
 export const isHttps = () => {
@@ -46,7 +47,7 @@ const processQueue = (error, token = null) => {
       prom.resolve(token);
     }
   });
-  
+
   failedQueue = [];
 };
 
@@ -58,7 +59,7 @@ const getCSRFToken = () => {
     ?.split('=')[1] || '';
 };
 
-// ตรวจสอบว่าอยู่ในหน้า login หรือไม่ 
+// ตรวจสอบว่าอยู่ในหน้า login หรือไม่
 const isLoginPage = () => {
   return window.location.pathname === '/login';
 };
@@ -70,7 +71,7 @@ axiosInstance.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
-    
+
     // ถ้าเป็นข้อผิดพลาด 401 (Unauthorized) และยังไม่ได้พยายาม refresh และไม่ได้อยู่ที่หน้า login
     if (error.response?.status === 401 && !originalRequest._retry && !isLoginPage()) {
       if (isRefreshing) {
@@ -95,14 +96,14 @@ axiosInstance.interceptors.response.use(
           {},
           { withCredentials: true }
         );
-        
+
         if (response.data?.access_token) {
           // เก็บ token ใหม่
           localStorage.setItem('access_token', response.data.access_token);
-          
+
           // แจ้งให้ request ที่ล้มเหลวทั้งหมดทราบว่า refresh สำเร็จแล้ว
           processQueue(null, response.data.access_token);
-          
+
           // เพิ่ม token ให้กับ request ต้นฉบับและส่งใหม่
           originalRequest.headers['Authorization'] = `Bearer ${response.data.access_token}`;
           return axiosInstance(originalRequest);
@@ -118,7 +119,7 @@ axiosInstance.interceptors.response.use(
       } catch (refreshError) {
         // จัดการข้อผิดพลาดในการ refresh token
         processQueue(refreshError);
-        
+
         // นำผู้ใช้ไปยังหน้า login ถ้า refresh token ไม่สามารถใช้งานได้
         // แต่ต้องตรวจสอบว่าไม่ได้อยู่ที่หน้า login อยู่แล้ว
         if (!isLoginPage()) {
@@ -158,7 +159,7 @@ export const apiConfig = {
     const formattedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     return `${API_URL}${formattedEndpoint}`;
   },
-  
+
   headers: {
     'Content-Type': 'application/json',
   }

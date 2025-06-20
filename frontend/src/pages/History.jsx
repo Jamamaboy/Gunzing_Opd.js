@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import AdminHistory from '../components/History/SuperAdmin/History';
 import UserHistory from '../components/History/User/History';
 import FirearmsDepHistory from '../components/History/Admin/Firearm Department/History';

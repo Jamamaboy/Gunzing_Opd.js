@@ -5,7 +5,7 @@ import { TbHistory } from "react-icons/tb";
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../config/api';
 
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 
 import FilterPopup from '../History/Common/FilterPopup';
 import FilterTags from '../History/Common/FilterTags';

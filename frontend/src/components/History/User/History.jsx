@@ -14,7 +14,7 @@ import HistoryTableRow from '../Common/HistoryTableRow';
 
 // Import custom hook
 import useHistoryData from '../../../hooks/useHistoryData';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '../../../hooks/useAuth';
 
 const History = () => {
   const navigate = useNavigate();

@@ -22,7 +22,7 @@ const AuthProvider = ({ children }) => {
       // Axios จะใส่ข้อมูลการตอบกลับใน response.data
       setUser(response.data);
       setIsAuthenticated(true);
-      
+
       // เก็บข้อมูล user ใน localStorage สำหรับ offline mode (ไม่เก็บข้อมูลละเอียด)
       const safeUserData = {
         user_id: response.data.user_id,
@@ -34,7 +34,7 @@ const AuthProvider = ({ children }) => {
         lastAuthenticated: new Date().toISOString()
       };
       localStorage.setItem('user_data', JSON.stringify(safeUserData));
-      
+
       return true;
     } catch (error) {
       console.error('Auth check error:', error);
@@ -53,12 +53,12 @@ const AuthProvider = ({ children }) => {
       const userData = localStorage.getItem('user_data');
       if (userData) {
         const parsedUser = JSON.parse(userData);
-        
+
         // ตรวจสอบว่าข้อมูลไม่เก่าเกิน 7 วัน
         const lastAuth = new Date(parsedUser.lastAuthenticated);
         const now = new Date();
         const daysDiff = Math.floor((now - lastAuth) / (1000 * 60 * 60 * 24));
-        
+
         if (daysDiff <= 7) {
           setUser(parsedUser);
           setIsAuthenticated(true);
@@ -96,14 +96,14 @@ const AuthProvider = ({ children }) => {
       const data = response.data;
       setUser(data.user);
       setIsAuthenticated(true);
-      
+
       // บันทึกข้อมูล user สำหรับใช้ offline
       const safeUserData = {
         ...data.user,
         lastAuthenticated: new Date().toISOString()
       };
       localStorage.setItem('user_data', JSON.stringify(safeUserData));
-      
+
       // เก็บ token ในที่เดียว
       if (data.access_token) {
         localStorage.setItem('access_token', data.access_token);
@@ -112,12 +112,12 @@ const AuthProvider = ({ children }) => {
         sessionStorage.removeItem('token');
         console.log('Token saved to localStorage');
       }
-      
+
       return { success: true };
     } catch (error) {
       console.error('Login error:', error);
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: error.response?.data?.detail || 'เกิดข้อผิดพลาดระหว่างการเข้าสู่ระบบ'
       };
     } finally {
@@ -146,20 +146,20 @@ const AuthProvider = ({ children }) => {
     }
   };
 
-  useEffect(() => {
-    // ตรวจสอบว่าอยู่ที่หน้า Login หรือไม่
-    const isLoginPage = window.location.pathname === '/login';
-    
-    if (isLoginPage) {
-      // ถ้าอยู่ที่หน้า login ไม่จำเป็นต้องเรียก checkAuth()
-      // เพียงแค่ตั้งค่า initialCheckComplete เป็น true
-      setLoading(false);
-      setInitialCheckComplete(true);
-    } else {
-      // ถ้าไม่ได้อยู่ที่หน้า login ให้ตรวจสอบสถานะการ authentication ตามปกติ
-      checkAuth();
-    }
-  }, []);
+  // useEffect(() => {
+  //   // ตรวจสอบว่าอยู่ที่หน้า Login หรือไม่
+  //   const isLoginPage = window.location.pathname === '/login';
+
+  //   if (isLoginPage) {
+  //     // ถ้าอยู่ที่หน้า login ไม่จำเป็นต้องเรียก checkAuth()
+  //     // เพียงแค่ตั้งค่า initialCheckComplete เป็น true
+  //     setLoading(false);
+  //     setInitialCheckComplete(true);
+  //   } else {
+  //     // ถ้าไม่ได้อยู่ที่หน้า login ให้ตรวจสอบสถานะการ authentication ตามปกติ
+  //     checkAuth();
+  //   }
+  // }, []);
 
   // Context value
   const value = {

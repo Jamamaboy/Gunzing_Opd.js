@@ -10,13 +10,10 @@ import ImageProvider from './context/ImageContext'
 import EvidenceProvider from './context/EvidenceContext'
 import { SessionProvider } from './context/SessionContext'
 
-if (window.location.pathname === '/') {
-  window.location.pathname = '/login'
-}
 
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
-    <SessionProvider>
+    {/* <SessionProvider> */}
       <AuthProvider>
         <DeviceProvider>
           <UIProvider>
@@ -28,6 +25,6 @@ createRoot(document.getElementById('root')).render(
           </UIProvider>
         </DeviceProvider>
       </AuthProvider>
-    </SessionProvider>
+    {/* </SessionProvider> */}
   </BrowserRouter>
 )
