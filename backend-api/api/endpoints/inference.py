@@ -25,7 +25,8 @@ async def analyze_image(image: UploadFile = File(...)):
         file_content = await image.read()
         logger.info(f"File read completed. Size: {len(file_content)} bytes")
         
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        # เพิ่ม timeout เป็น 120 วินาที สำหรับการวิเคราะห์ยาเสพติดที่ใช้เวลานาน
+        async with httpx.AsyncClient(timeout=120.0) as client:
             logger.info(f"Preparing request to AI service at: {ai_service_url}")
             
             headers = {
@@ -37,17 +38,17 @@ async def analyze_image(image: UploadFile = File(...)):
             try:
                 response = await client.post(
                     f"{ai_service_url}/api/analyze",
-                    files={"image": (image.filename, file_content)},
+                    files={"image": (image.filename, file_content, image.content_type)},
                     headers=headers,
-                    timeout=30.0
+                    timeout=120.0  # เพิ่ม timeout
                 )
                 logger.info(f"Received response from AI service. Status: {response.status_code}")
                 
             except httpx.TimeoutException as timeout_exc:
-                logger.error(f"Request to AI service timed out after 30 seconds: {str(timeout_exc)}")
+                logger.error(f"Request to AI service timed out after 120 seconds: {str(timeout_exc)}")
                 raise HTTPException(
                     status_code=504,
-                    detail="AI service request timed out after 30 seconds"
+                    detail="AI service request timed out after 120 seconds"
                 )
             except httpx.ConnectError as conn_exc:
                 logger.error(f"Failed to connect to AI service: {str(conn_exc)}")
@@ -66,7 +67,12 @@ async def analyze_image(image: UploadFile = File(...)):
             logger.info("Successfully received response from AI service")
             end_time = time.time()
             logger.info(f"Total processing time: {end_time - start_time:.2f} seconds")
-            return response.json()
+            
+            # Log response สำหรับ debug
+            response_data = response.json()
+            logger.info(f"Response data keys: {list(response_data.keys()) if isinstance(response_data, dict) else 'Not a dict'}")
+            
+            return response_data
             
     except httpx.RequestError as exc:
         logger.error(f"Request to AI service failed: {str(exc)}")

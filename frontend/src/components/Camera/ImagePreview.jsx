@@ -3,7 +3,7 @@ import { X, RotateCcw, ArrowLeft, Send } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDevice } from '../../context/DeviceContext';
 import { api } from '../../config/api';
-import { findSimilarNarcotics, findSimilarNarcoticsWithBase64, prepareSimilarNarcoticsForDisplay } from '../../services/narcoticReferenceService';
+import { findSimilarNarcoticsWithBase64 } from '../../services/narcoticReferenceService';
 
 const API_PATH = '/api';
 
@@ -164,7 +164,8 @@ const ImagePreview = () => {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
-          signal: controller.signal
+          signal: controller.signal,
+          timeout: 120000 // ✅ เพิ่ม timeout สำหรับยาเสพติด
         });
         
         clearTimeout(timeoutId);
@@ -272,6 +273,116 @@ const ImagePreview = () => {
           console.log("=== Final Result for Navigation ===");
           console.log("brandData:", result.brandData);
           console.log("candidates:", result.candidates);
+        } 
+        // ✅ ประมวลผลยาเสพติด
+        else if (result.detectionType === 'narcotic' && result.detected_objects) {
+          console.log("=== Processing Narcotic Data ===");
+          
+          const drugCandidates = [];
+          
+          for (const detection of result.detected_objects) {
+            if (detection.class === 'Drug') {
+              // ถ้ามี similar_narcotics จาก Backend แล้ว
+              if (detection.similar_narcotics && Array.isArray(detection.similar_narcotics)) {
+                console.log(`Found ${detection.similar_narcotics.length} similar narcotics from backend`);
+                
+                detection.similar_narcotics.forEach(narcotic => {
+                  drugCandidates.push({
+                    label: narcotic.characteristics || narcotic.name || 'ยาเสพติดไม่ทราบลักษณะ',
+                    displayName: narcotic.characteristics || narcotic.name || 'ยาเสพติดไม่ทราบลักษณะ',
+                    confidence: narcotic.similarity || detection.confidence || 0,
+                    narcotic_id: narcotic.narcotic_id,
+                    drug_type: narcotic.drug_type || 'ไม่ทราบชนิด',
+                    drug_category: narcotic.drug_category || 'ไม่ทราบประเภท',
+                    characteristics: narcotic.characteristics || 'ไม่ทราบอัตลักษณ์',
+                    similarity: narcotic.similarity || 0,
+                    source: 'backend_search'
+                  });
+                });
+              } 
+              // ✅ ถ้าไม่มี similar_narcotics ให้ใช้ vector ที่ได้มาค้นหาเอง
+              else if (detection.vector_base64) {
+                console.log('No similar narcotics from backend, searching with vector...');
+                
+                try {
+                  // ใช้ findSimilarNarcoticsWithBase64 จาก narcoticReferenceService
+                  const similarResults = await findSimilarNarcoticsWithBase64(detection.vector_base64, 3);
+                  
+                  console.log('Found similar narcotics from frontend search:', similarResults);
+                  
+                  if (similarResults && similarResults.length > 0) {
+                    similarResults.forEach(narcotic => {
+                      drugCandidates.push({
+                        label: narcotic.characteristics || narcotic.name || 'ยาเสพติดไม่ทราบลักษณะ',
+                        displayName: narcotic.characteristics || narcotic.name || 'ยาเสพติดไม่ทราบลักษณะ',
+                        confidence: narcotic.similarity || detection.confidence || 0,
+                        narcotic_id: narcotic.narcotic_id,
+                        drug_type: narcotic.drug_type || 'ไม่ทราบชนิด',
+                        drug_category: narcotic.drug_category || 'ไม่ทราบประเภท',
+                        characteristics: narcotic.characteristics || 'ไม่ทราบอัตลักษณ์',
+                        similarity: narcotic.similarity || 0,
+                        source: 'frontend_search'
+                      });
+                    });
+                  } else {
+                    // ถ้าไม่พบผลลัพธ์จากการค้นหา
+                    drugCandidates.push({
+                      label: detection.drug_type !== 'Unknown' ? detection.drug_type : 'ยาเสพติดไม่ทราบลักษณะ',
+                      displayName: detection.drug_type !== 'Unknown' ? detection.drug_type : 'ยาเสพติดไม่ทราบลักษณะ',
+                      confidence: detection.confidence || 0,
+                      drug_type: detection.drug_type || 'ไม่ทราบชนิด',
+                      drug_category: 'ยาเสพติดไม่ทราบประเภท',
+                      characteristics: detection.drug_type || 'ไม่ทราบอัตลักษณ์',
+                      vector_base64: detection.vector_base64,
+                      source: 'ai_detection'
+                    });
+                  }
+                } catch (searchError) {
+                  console.error('Error searching similar narcotics:', searchError);
+                  
+                  // Fallback ถ้าการค้นหาผิดพลาด
+                  drugCandidates.push({
+                    label: detection.drug_type !== 'Unknown' ? detection.drug_type : 'ยาเสพติดไม่ทราบลักษณะ',
+                    displayName: detection.drug_type !== 'Unknown' ? detection.drug_type : 'ยาเสพติดไม่ทราบลักษณะ',
+                    confidence: detection.confidence || 0,
+                    drug_type: detection.drug_type || 'ไม่ทราบชนิด',
+                    drug_category: 'ยาเสพติดไม่ทราบประเภท',
+                    characteristics: detection.drug_type || 'ไม่ทราบอัตลักษณ์',
+                    vector_base64: detection.vector_base64,
+                    source: 'ai_detection_fallback'
+                  });
+                }
+              } else {
+                // ถ้าไม่มีทั้ง similar_narcotics และ vector_base64
+                drugCandidates.push({
+                  label: detection.drug_type !== 'Unknown' ? detection.drug_type : 'ยาเสพติดไม่ทราบลักษณะ',
+                  displayName: detection.drug_type !== 'Unknown' ? detection.drug_type : 'ยาเสพติดไม่ทราบลักษณะ',
+                  confidence: detection.confidence || 0,
+                  drug_type: detection.drug_type || 'ไม่ทราบชนิด',
+                  drug_category: 'ยาเสพติดไม่ทราบประเภท',
+                  characteristics: detection.drug_type || 'ไม่ทราบอัตลักษณ์',
+                  source: 'basic_detection'
+                });
+              }
+            }
+          }
+          
+          // เพิ่มตัวเลือก "ไม่ทราบชนิด" เสมอ
+          drugCandidates.push({
+            label: 'ยาเสพติดประเภทไม่ทราบชนิด',
+            displayName: 'ยาเสพติดประเภทไม่ทราบชนิด',
+            confidence: 0,
+            isUnknownDrug: true,
+            characteristics: 'ไม่ทราบอัตลักษณ์',
+            exhibit_id: 94,
+            drug_type: 'ไม่ทราบชนิด',
+            drug_category: 'ไม่ทราบประเภท',
+            source: 'manual_option'
+          });
+          
+          result.drugCandidates = drugCandidates;
+          console.log("=== Final Drug Candidates ===");
+          console.log("Drug candidates:", drugCandidates);
         }
         
         localStorage.setItem('analysisResult', JSON.stringify(result));
@@ -279,6 +390,7 @@ const ImagePreview = () => {
         navigate('/candidateShow', { 
           state: { 
             result: result,
+            analysisResult: result,
             image: imageData,
             fromCamera: fromCamera,
             uploadFromCameraPage: location.state?.uploadFromCameraPage || false,

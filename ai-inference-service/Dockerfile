@@ -19,7 +19,7 @@ RUN pip install -r requirements.txt
 # Create model directory
 RUN mkdir -p /app/model
 
-# Copy source code and models
+# Copy source code and models (excluding .venv)
 COPY . .
 
 # Verify models exist
@@ -35,8 +35,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     LOG_LEVEL=INFO \
     MODEL_PATH=/app/model
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s CMD curl -f http://localhost:8080/health || exit 1
+# Enhanced health check with readiness probe
+HEALTHCHECK --interval=30s --timeout=10s --start-period=300s --retries=3 \
+  CMD curl -f http://localhost:8080/ready || exit 1
 
 # รัน AI service
 EXPOSE 8080
