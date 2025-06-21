@@ -21,10 +21,41 @@ from api.endpoints.defendant import router as defendant_router
 from api.endpoints.statistic import router as statistic_router
 from config.logging_config import setup_logging
 import os
+import logging
 from dotenv import load_dotenv
+
+class GeographyLogFilter(logging.Filter):
+    """Filter เฉพาะ Geography SQL logs"""
+    
+    def filter(self, record):
+        if hasattr(record, 'getMessage'):
+            message = record.getMessage()
+            # ✅ ปิดเฉพาะ logs ที่เกี่ยวกับ geography
+            geography_patterns = [
+                'ST_AsGeoJSON',
+                'subdistricts.geom',
+                'districts.geom',
+                'provinces.geom',
+                'FROM subdistricts',
+                'FROM districts',
+                'FROM provinces',
+                'SELECT subdistricts.',
+                'SELECT districts.',
+                'SELECT provinces.'
+            ]
+            
+            for pattern in geography_patterns:
+                if pattern in message:
+                    return False  # ปิด geography logs
+        
+        return True  # อนุญาต logs อื่นๆ
 
 # Setup logging
 logger = setup_logging()
+
+# ✅ เพิ่ม filter เฉพาะ geography
+geography_filter = GeographyLogFilter()
+logging.getLogger('sqlalchemy.engine').addFilter(geography_filter)
 
 app = FastAPI()
 
@@ -68,11 +99,20 @@ async def add_cookie_middleware(request, call_next):
         new_cookies = []
         
         for cookie in cookies:
-            # ตั้งค่าเหมือน production
-            if "SameSite" not in cookie:
-                cookie += "; SameSite=None"
-            if "Secure" not in cookie:
-                cookie += "; Secure"
+            # ตรวจสอบ environment และตั้งค่า cookie ตามนั้น
+            if IS_PRODUCTION:
+                # Production: ใช้ Secure และ SameSite=None
+                if "SameSite" not in cookie:
+                    cookie += "; SameSite=None"
+                if "Secure" not in cookie:
+                    cookie += "; Secure"
+            else:
+                # Development: ใช้ SameSite=Lax และไม่ใช้ Secure
+                if "SameSite" not in cookie:
+                    cookie += "; SameSite=Lax"
+                # ลบ Secure ออกถ้ามี (สำหรับ development)
+                if "Secure" in cookie:
+                    cookie = cookie.replace("; Secure", "")
             
             new_cookies.append(cookie)
         
@@ -109,6 +149,16 @@ app.include_router(statistic_router, prefix="/api")
 async def health_check():
     logger.info("Health check endpoint called")
     return {"status": "healthy"}
+
+@app.get("/api/debug")
+async def debug_info():
+    """Debug endpoint to check environment and configuration"""
+    return {
+        "environment": ENVIRONMENT,
+        "is_production": IS_PRODUCTION,
+        "allowed_origins": allowed_origins,
+        "timestamp": "2025-06-21T02:00:00Z"
+    }
 
 @app.get("/")
 async def root():

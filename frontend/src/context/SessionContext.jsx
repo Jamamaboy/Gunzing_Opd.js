@@ -40,11 +40,11 @@ export const SessionProvider = ({ children }) => {
       setSessionId(newSessionId);
       setLastValidPath(currentPath);
       // เก็บ sessionId ใน sessionStorage
-      sessionStorage.setItem('currentSessionId', newSessionId);
+      sessionStorage.setItem('sessionId', newSessionId); // <-- เปลี่ยนตรงนี้
     } 
     // 2. ถ้าอยู่ในหน้าอื่นๆ ของ cycle แต่ไม่มี session ให้ดึงจาก sessionStorage
     else if (isInCycle(currentPath)) {
-      const storedSessionId = sessionStorage.getItem('currentSessionId');
+      const storedSessionId = sessionStorage.getItem('sessionId'); // <-- เปลี่ยนตรงนี้
       if (storedSessionId) {
         setSessionId(storedSessionId);
         setLastValidPath(currentPath);
@@ -61,7 +61,7 @@ export const SessionProvider = ({ children }) => {
       clearSession();
       setSessionId(null);
       setLastValidPath(null);
-      sessionStorage.removeItem('currentSessionId');
+      sessionStorage.removeItem('sessionId'); // <-- เปลี่ยนตรงนี้
     }
   }, [location.pathname, navigate]);
 

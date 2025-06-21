@@ -1,6 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
 
-// กำหนดหน้าที่อยู่ใน cycle
 const CYCLE_PAGES = [
   '/imagePreview',
   '/candidateShow',
@@ -26,7 +25,12 @@ export const createSession = () => {
  * @returns {boolean} true ถ้ามี sessionId ที่ถูกต้อง, false ถ้าไม่มี
  */
 export const hasValidSession = () => {
-  return sessionStorage.getItem('sessionId') !== null;
+  const sessionId = sessionStorage.getItem('sessionId');
+  const hasStoredEvidence = localStorage.getItem('analysisResult') || 
+                           localStorage.getItem('currentEvidenceData');
+  
+  // ถ้ามี sessionId หรือมีข้อมูล evidence ใน localStorage ให้ถือว่า valid
+  return sessionId !== null || hasStoredEvidence !== null;
 };
 
 /**
@@ -42,7 +46,6 @@ export const getSessionId = () => {
  */
 export const clearSession = () => {
   sessionStorage.removeItem('sessionId');
-  // ล้างข้อมูล session อื่นๆ ที่เกี่ยวข้องด้วย
   sessionStorage.removeItem('currentCycleData');
 };
 
@@ -52,10 +55,7 @@ export const clearSession = () => {
  * @returns {boolean} true ถ้าอยู่ใน cycle, false ถ้าไม่อยู่
  */
 export const isInCycle = (path) => {
-  // ตรวจสอบว่าพาธเริ่มต้นด้วยหนึ่งในพาธของ cycle หรือไม่
   return CYCLE_PAGES.some(cyclePath => {
-    // สำหรับ /evidenceProfile ให้ตรวจสอบว่าพาธเริ่มต้นด้วย /evidenceProfile/
-    // แต่ต้องเป็นพาธที่อยู่ใน cycle เท่านั้น
     if (cyclePath === '/evidenceProfile') {
       return path === cyclePath || 
              (path.startsWith('/evidenceProfile/') && 

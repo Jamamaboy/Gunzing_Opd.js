@@ -6,6 +6,10 @@ from sqlalchemy.orm import selectinload
 from typing import List, Dict, Any, Optional
 from models.geography import Province
 
+# ✅ ปิด SQLAlchemy logs เฉพาะ province service
+logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
+logging.getLogger('sqlalchemy.dialects').setLevel(logging.ERROR)
+
 # Setup logger
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

@@ -34,6 +34,19 @@ const BottomBar = ({ analysisResult, evidence, fromCamera, sourcePath }) => {
   };
 
   const handleSave = () => {
+    // ตรวจสอบข้อมูลก่อน navigate
+    if (!evidenceData) {
+      console.error('No evidence data available');
+      return;
+    }
+    
+    console.log('Navigating to save-to-record with data:', {
+      evidence: evidenceData,
+      analysisResult: analysisResult,
+      fromEvidence: true
+    });
+    
+    // ไปหน้าบันทึกประวัติโดยไม่ต้องยืนยันตัวตน
     navigate('/evidenceProfile/save-to-record', { 
       state: { 
         evidence: evidenceData,
@@ -42,7 +55,8 @@ const BottomBar = ({ analysisResult, evidence, fromCamera, sourcePath }) => {
         fromCamera: isFromCamera,
         uploadFromCameraPage,
         sourcePath: sourcePath_
-      } 
+      },
+      replace: false
     });
   };
 

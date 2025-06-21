@@ -10,8 +10,10 @@ import ImageProvider from './context/ImageContext'
 import EvidenceProvider from './context/EvidenceContext'
 import { SessionProvider } from './context/SessionContext'
 
+// ✅ ลดการ redirect ที่ซับซ้อน
 if (window.location.pathname === '/') {
-  window.location.pathname = '/login'
+  // ✅ เปลี่ยนเป็น redirect ง่ายๆ
+  window.location.pathname = '/home';
 }
 
 createRoot(document.getElementById('root')).render(

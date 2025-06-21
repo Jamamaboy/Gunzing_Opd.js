@@ -9,6 +9,7 @@ import Gallery from '../components/EvidenceProfile/Gallery';
 import History from '../components/EvidenceProfile/History';
 import Map from '../components/EvidenceProfile/Map';
 import { api } from '../config/api';
+import { getSessionId, hasValidSession } from '../utils/SessionManager';
 
 let inMemoryEvidenceStore = null;
 const API_PATH = '/api';
@@ -428,6 +429,16 @@ const EvidenceProfile = () => {
     console.log("Evidence exhibit_id:", evidence?.result?.exhibit_id);
     console.log("=============================");
   }, [evidence]);
+
+  // Log sessionId ทุกครั้งที่ EvidenceProfile render หรือ path เปลี่ยน
+  useEffect(() => {
+    const sessionId = getSessionId();
+    console.log('=== [EvidenceProfile] Session ID ===');
+    console.log('sessionId:', sessionId);
+    console.log('hasValidSession:', hasValidSession());
+    console.log('Current path:', location.pathname);
+    console.log('===============================');
+  }, [location.pathname]);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">

@@ -31,14 +31,10 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["auth"])
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-if not SECRET_KEY:
-    # ถ้าไม่มี SECRET_KEY กำหนดใน .env ให้แสดงคำเตือนและสร้างคีย์ชั่วคราว
-    SECRET_KEY = secrets.token_hex(32)
-    print("WARNING: Using randomly generated SECRET_KEY. Set JWT_SECRET_KEY in .env for production!")
     
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 15  # ลดเหลือ 15 นาทีเพื่อความปลอดภัย
-REFRESH_TOKEN_EXPIRE_DAYS = 7  # Refresh token มีอายุ 7 วัน
+ACCESS_TOKEN_EXPIRE_MINUTES = 15
+REFRESH_TOKEN_EXPIRE_DAYS = 7
 ACCESS_COOKIE_NAME = "access_token"
 REFRESH_COOKIE_NAME = "refresh_token"
 CSRF_TOKEN_NAME = "csrf_token"
@@ -46,7 +42,7 @@ CSRF_TOKEN_NAME = "csrf_token"
 # Environment check - ตรวจสอบว่าเป็น production หรือไม่
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 IS_PRODUCTION = ENVIRONMENT.lower() == "production"
-USE_SECURE_COOKIE = IS_PRODUCTION  # ใช้ secure cookie เมื่อเป็น production (ควรใช้ HTTPS)
+USE_SECURE_COOKIE = IS_PRODUCTION
 
 router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

@@ -11,6 +11,10 @@ from models.geography import Province, District, Subdistrict
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# ✅ ปิด SQLAlchemy logs เฉพาะ geography service
+logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
+logging.getLogger('sqlalchemy.dialects').setLevel(logging.ERROR)
+
 async def search_geography_hierarchy(
     db: AsyncSession,
     province_name: str,

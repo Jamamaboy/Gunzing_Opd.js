@@ -11,7 +11,7 @@ services:
       # Frontend Environment Variables
       - VITE_SPHERE_API_KEY=A5AABB9058C44FCDB3A6E3F248265E21
       - VITE_LONGDO_MAP_API_KEY=12a91099fdf18c01e89d872f6175c84b
-      - VITE_API_URL=http://localhost:8000
+      - VITE_API_URL=http://backend-api:8000
       - NODE_ENV=production
     depends_on:
       - backend-api

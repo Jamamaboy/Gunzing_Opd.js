@@ -1,8 +1,13 @@
+import logging
 from sqlalchemy import Column, Integer, String, Float, ForeignKey
 from sqlalchemy.orm import relationship
 from geoalchemy2 import Geometry
 from db.base import Base
 import json
+
+# ✅ ปิด SQLAlchemy logs เฉพาะ geography queries
+logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
+logging.getLogger('sqlalchemy.dialects').setLevel(logging.ERROR)
 
 class Province(Base):
     __tablename__ = "provinces"

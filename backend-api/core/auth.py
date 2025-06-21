@@ -11,7 +11,6 @@ import logging
 
 load_dotenv()
 
-# ตั้งค่า logger
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -115,16 +114,25 @@ async def get_admin_user(
 
 # ตั้งค่า cookie options สำหรับ production
 def get_cookie_options():
+    # ✅ สำหรับ development ให้ใช้ค่าที่ปลอดภัย
+    is_development = os.getenv("ENVIRONMENT", "development").lower() == "development"
+    
     base_options = {
         "httponly": True,
-        "samesite": "None",  # ใช้ None สำหรับ cross-site requests
-        "secure": True,      # ใช้ secure ใน production
+        "samesite": "lax" if is_development else "none",  # ✅ ใช้ lax ใน development, none ใน production
+        "secure": False if is_development else True,  # ✅ ไม่ใช้ secure ใน development
         "path": "/"
     }
+    
+    logger.info(f"Cookie options: {base_options}")
     return base_options
 
 def set_auth_cookies(response: Response, access_token: str, refresh_token: str, csrf_token: str):
     cookie_options = get_cookie_options()
+    
+    # ✅ เพิ่ม debug logging
+    logger.info(f"Setting cookies with options: {cookie_options}")
+    logger.info(f"Access token length: {len(access_token)}")
     
     # ตั้งค่า access token cookie
     response.set_cookie(
@@ -134,6 +142,9 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str, 
         **cookie_options
     )
     
+    # ✅ เพิ่ม logging เพื่อดูว่า cookie ถูกตั้งค่าหรือไม่
+    logger.info(f"Access token cookie set: {ACCESS_COOKIE_NAME}")
+
     # ตั้งค่า refresh token cookie
     refresh_options = cookie_options.copy()
     refresh_options["path"] = "/api/auth"  # จำกัดให้ใช้ได้เฉพาะกับ refresh endpoint

@@ -1,10 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import apiConfig from '../config/api';
 import { api } from '../config/api';
 
-const API_URL = apiConfig.baseUrl || '';
-
-// สร้าง AuthContext
 export const AuthContext = createContext();
 
 const AuthProvider = ({ children }) => {
@@ -13,76 +9,97 @@ const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [initialCheckComplete, setInitialCheckComplete] = useState(false);
 
-  // ตรวจสอบว่ามีการ authenticate แล้วหรือยัง
   const checkAuth = async () => {
     try {
       console.log("=== Authentication Check ===");
       
-      // ตรวจสอบ CSRF token
       const csrfToken = document.cookie
         .split('; ')
         .find(row => row.startsWith('csrf_token='))
         ?.split('=')[1];
       
+      const accessToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('access_token='))
+        ?.split('=')[1];
+      
       console.log("CSRF Token exists:", !!csrfToken);
+      console.log("Access Token exists:", !!accessToken);
       
-      // ตรวจสอบ token กับ backend
-      const response = await api.get('/api/auth/user');
-      setUser(response.data);
-      setIsAuthenticated(true);
+      // ✅ ถ้าไม่มี token ให้ลอง offline mode ก่อน
+      if (!accessToken && !csrfToken) {
+        console.log("No tokens found, trying offline mode");
+        return handleOfflineMode();
+      }
       
-      // เก็บข้อมูล user ใน localStorage
-      const safeUserData = {
-        user_id: response.data.user_id,
-        firstname: response.data.firstname,
-        lastname: response.data.lastname,
-        email: response.data.email,
-        role: response.data.role,
-        title: response.data.title,
-        lastAuthenticated: new Date().toISOString()
-      };
-      localStorage.setItem('user_data', JSON.stringify(safeUserData));
-      
-      return true;
-    } catch (error) {
-      console.error('Auth check error:', error);
-      
-      if (error.response?.status === 401) {
-        // ลอง refresh token ก่อน
+      // ✅ ถ้ามี access token ให้ลองเรียก API
+      if (accessToken) {
         try {
-          console.log('Attempting to refresh token...');
+          const response = await api.get('/api/auth/user');
+          setUser(response.data);
+          setIsAuthenticated(true);
+          
+          const safeUserData = {
+            user_id: response.data.user_id,
+            firstname: response.data.firstname,
+            lastname: response.data.lastname,
+            email: response.data.email,
+            role: response.data.role,
+            title: response.data.title,
+            department: response.data.department,
+            lastAuthenticated: new Date().toISOString()
+          };
+          localStorage.setItem('user_data', JSON.stringify(safeUserData));
+          
+          console.log("Authentication successful:", response.data);
+          return true;
+        } catch (error) {
+          console.error('User API failed, trying refresh...');
+          // Fall through to refresh logic
+        }
+      }
+      
+      // ✅ ลอง refresh token
+      if (!accessToken && csrfToken) {
+        console.log("Trying to refresh token...");
+        try {
           const refreshResponse = await api.post('/api/auth/refresh');
+          
           if (refreshResponse.data.success) {
-            console.log('Token refresh successful');
-            
-            // เก็บ CSRF token ใหม่
-            if (refreshResponse.data.csrf_token) {
-              document.cookie = `csrf_token=${refreshResponse.data.csrf_token}; path=/`;
-              console.log('New CSRF token saved to cookie');
-            }
-            
+            console.log("Token refresh successful");
             const userResponse = await api.get('/api/auth/user');
             setUser(userResponse.data);
             setIsAuthenticated(true);
+            
+            const safeUserData = {
+              user_id: userResponse.data.user_id,
+              firstname: userResponse.data.firstname,
+              lastname: userResponse.data.lastname,
+              email: userResponse.data.email,
+              role: userResponse.data.role,
+              title: userResponse.data.title,
+              department: userResponse.data.department,
+              lastAuthenticated: new Date().toISOString()
+            };
+            localStorage.setItem('user_data', JSON.stringify(safeUserData));
+            
             return true;
           }
         } catch (refreshError) {
           console.error('Token refresh failed:', refreshError);
+          return handleOfflineMode();
         }
-        
-        // ถ้า refresh ไม่สำเร็จ ให้ logout
-        logout();
-      } else {
-        handleOfflineMode();
       }
-      return false;
+      
+    } catch (error) {
+      console.error('Auth check error:', error);
+      return handleOfflineMode();
     } finally {
       setLoading(false);
       setInitialCheckComplete(true);
     }
   };
 
-  // จัดการกรณี offline mode โดยใช้ข้อมูลล่าสุดจาก localStorage
   const handleOfflineMode = () => {
     try {
       const userData = localStorage.getItem('user_data');
@@ -114,13 +131,11 @@ const AuthProvider = ({ children }) => {
     }
   };
 
-  // Login function
   const login = async (email, password) => {
     setLoading(true);
     try {
       console.log("=== Login Attempt ===");
       console.log("Email:", email);
-      console.log("API URL:", API_URL);
       
       const formData = new URLSearchParams();
       formData.append('username', email);
@@ -147,6 +162,7 @@ const AuthProvider = ({ children }) => {
       // เก็บ CSRF token
       if (data.csrf_token) {
         document.cookie = `csrf_token=${data.csrf_token}; path=/`;
+        console.log('CSRF token set in cookie:', document.cookie);
         console.log('CSRF token saved to cookie');
       }
       
@@ -182,17 +198,31 @@ const AuthProvider = ({ children }) => {
     }
   };
 
+  // ✅ เพิ่มฟังก์ชัน debug cookies
+  const debugCookies = () => {
+    console.log("=== Cookie Debug ===");
+    console.log("All cookies:", document.cookie);
+    console.log("Parsed cookies:");
+    
+    document.cookie.split('; ').forEach(cookie => {
+      const [name, value] = cookie.split('=');
+      console.log(`  ${name}: ${value ? 'exists' : 'empty'}`);
+    });
+    
+    console.log("==================");
+  };
+
+  // เรียกใช้ debug เมื่อ component mount
   useEffect(() => {
+    debugCookies(); // ✅ เพิ่มบรรทัดนี้
+    
     // ตรวจสอบว่าอยู่ที่หน้า Login หรือไม่
     const isLoginPage = window.location.pathname === '/login';
     
     if (isLoginPage) {
-      // ถ้าอยู่ที่หน้า login ไม่จำเป็นต้องเรียก checkAuth()
-      // เพียงแค่ตั้งค่า initialCheckComplete เป็น true
       setLoading(false);
       setInitialCheckComplete(true);
     } else {
-      // ถ้าไม่ได้อยู่ที่หน้า login ให้ตรวจสอบสถานะการ authentication ตามปกติ
       checkAuth();
     }
   }, []);

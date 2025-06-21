@@ -12,9 +12,14 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  // ถ้าผู้ใช้ authenticated แล้ว ให้ redirect ไปหน้า home
   useEffect(() => {
+    console.log("=== Login Page Mount ===");
+    console.log("initialCheckComplete:", initialCheckComplete);
+    console.log("isAuthenticated:", isAuthenticated);
+    console.log("Current cookies:", document.cookie);
+    
     if (initialCheckComplete && isAuthenticated) {
+      console.log("User is authenticated, redirecting to home");
       navigate('/home');
     }
   }, [isAuthenticated, initialCheckComplete, navigate]);
@@ -28,8 +33,6 @@ const Login = () => {
       const result = await login(email, password);
       
       if (result.success) {
-        // การ navigate ไม่จำเป็น เพราะ useEffect hook จะจัดการให้
-        // แต่อาจต้องการความเร็วในการตอบสนอง การมี navigate ไว้จึงยังมีประโยชน์
         navigate('/home');
       } else {
         setError(result.error);

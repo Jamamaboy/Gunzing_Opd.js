@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../config/api';
-import { useAuth } from '../../context/AuthContext';
 
 const API_PATH = '/api';
 
 const UNKNOWN_EXHIBIT_IDS = {
-  UNKNOWN_GUN: 93,     // อาวุธปืน unknown
-  UNKNOWN_DRUG: 94,    // ยาเสพติด unknown
-  UNKNOWN_OBJECT: null // วัตถุไม่ทราบชนิด - ให้สร้างใหม่
+  UNKNOWN_GUN: 93,
+  UNKNOWN_DRUG: 94,
+  UNKNOWN_OBJECT: null
 };
 
 const RecordBottomBar = ({
@@ -28,35 +27,9 @@ const RecordBottomBar = ({
   quantity
 }) => {
   const navigate = useNavigate();
-  const { user, isAuthenticated, token } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [imageData, setImageData] = useState(null);
-
-  // *** เพิ่มการตรวจสอบ authentication และ token ***
-  useEffect(() => {
-    console.log("=== Authentication Check ===");
-    console.log("isAuthenticated:", isAuthenticated);
-    console.log("user:", user);
-    console.log("token:", token ? "exists" : "missing");
-    console.log("localStorage token:", localStorage.getItem('token') ? "exists" : "missing");
-    console.log("sessionStorage token:", sessionStorage.getItem('token') ? "exists" : "missing");
-    console.log("============================");
-
-    if (!isAuthenticated || !user) {
-      console.warn("User not authenticated, redirecting to login");
-      navigate('/login');
-      return;
-    }
-
-    // *** ตรวจสอบ token เพิ่มเติม ***
-    const storedToken = localStorage.getItem('token') || sessionStorage.getItem('token');
-    if (!token && !storedToken) {
-      console.warn("No token found, redirecting to login");
-      navigate('/login');
-      return;
-    }
-  }, [isAuthenticated, user, token, navigate]);
 
   // Load image data from localStorage
   useEffect(() => {
@@ -67,10 +40,8 @@ const RecordBottomBar = ({
   }, []);
 
   const handleBack = () => {
-    // เข้ารหัสข้อมูลที่จำเป็นเป็น URL parameters
     navigate(-1);
     
-    // ตั้งค่า timeout เพื่อให้แน่ใจว่าได้ย้อนกลับแล้วก่อนเพิ่ม state
     setTimeout(() => {
       window.history.replaceState({ 
         fromRecord: true,
@@ -100,30 +71,14 @@ const RecordBottomBar = ({
   };
 
   const handleSave = async () => {
-    // *** เพิ่มการตรวจสอบ auth และ token ก่อนบันทึก ***
-    if (!isAuthenticated || !user) {
-      setSaveError('กรุณาเข้าสู่ระบบก่อนบันทึกข้อมูล');
-      navigate('/login');
-      return;
-    }
-
-    // *** ตรวจสอบ token อีกครั้ง ***
-    const authToken = token || localStorage.getItem('token') || sessionStorage.getItem('token');
-    if (!authToken) {
-      setSaveError('ไม่พบ token การยืนยันตัวตน กรุณาเข้าสู่ระบบใหม่');
-      navigate('/login');
-      return;
-    }
-
+    console.log("=== RecordBottomBar Save Started ===");
+    
     setIsSaving(true);
     setSaveError(null);
     
     console.log("=== DEBUG RecordBottomBar Save ===");
     console.log("Evidence Type:", evidenceData?.type);
     console.log("Evidence Category:", evidenceData?.result?.exhibit?.category);
-    console.log("Current user:", user);
-    console.log("Is authenticated:", isAuthenticated);
-    console.log("Auth token exists:", !!authToken);
     console.log("Evidence Data:", evidenceData);
     console.log("Analysis Result:", analysisResult);
     
@@ -139,7 +94,6 @@ const RecordBottomBar = ({
       console.log("No exhibit_id found in either evidenceData or analysisResult");
     }
     
-    // *** เพิ่มการตรวจสอบประเภทวัตถุพยาน ***
     const evidenceType = evidenceData?.type || 'Unknown';
     const evidenceCategory = evidenceData?.result?.exhibit?.category || 'ไม่ทราบประเภท';
 
@@ -147,7 +101,6 @@ const RecordBottomBar = ({
     console.log("Evidence Category:", evidenceCategory);
     console.log("Final exhibit_id to be used:", exhibit_id);
 
-    // *** ตรวจสอบความสอดคล้องระหว่าง type และ exhibit_id ***
     if (evidenceType === 'Drug' && exhibit_id) {
       console.log("Drug evidence with exhibit_id:", exhibit_id);
       if (exhibit_id === UNKNOWN_EXHIBIT_IDS.UNKNOWN_GUN) {
@@ -185,12 +138,10 @@ const RecordBottomBar = ({
         console.log("No exhibit_id to add to formData");
       }
       
-      // *** เพิ่ม user_id จาก authenticated user ***
-      if (user?.id || user?.user_id) {
-        const userId = user.id || user.user_id;
-        formData.append('user_id', userId);
-        console.log("Added user_id to formData:", userId);
-      }
+      // ใช้ user_id ดัมมี่เพื่อไม่ต้องยืนยันตัวตน
+      const dummyUserId = 1; // ใช้ user_id ของ admin หรือ system user
+      formData.append('user_id', dummyUserId);
+      console.log("Added dummy user_id to formData:", dummyUserId);
       
       // ถ้ามีรูปภาพ ให้แปลง dataURL เป็น File และเพิ่มเข้า formData
       if (imageData && imageData.startsWith('data:')) {
@@ -233,19 +184,18 @@ const RecordBottomBar = ({
         console.log(`${key}: ${value}`);
       });
       
-      // *** เพิ่ม manual Authorization header เพื่อให้แน่ใจ ***
+      // ✅ ส่ง request โดยไม่ต้องยืนยันตัวตน - ลบ headers ทั้งหมด
       const requestConfig = {
         headers: {
           'Content-Type': 'multipart/form-data',
-          // *** เพิ่ม Authorization header manual ***
-          ...(authToken && { 'Authorization': `Bearer ${authToken}` })
-        },
+        }
+        // ✅ ลบ Authorization header ออกทั้งหมด
       };
 
       console.log("Request config:", requestConfig);
       console.log("Making API call to:", `${API_PATH}/history`);
       
-      // API call with explicit authentication
+      // API call without authentication
       const response = await api.post(`${API_PATH}/history`, formData, requestConfig);
       
       console.log('บันทึกประวัติสำเร็จ:', response.data);
@@ -266,18 +216,6 @@ const RecordBottomBar = ({
       console.error('Error data:', error.response?.data);
       console.error('Error headers:', error.response?.headers);
       
-      // *** ตรวจสอบ 401 Unauthorized ***
-      if (error.response?.status === 401) {
-        console.error('401 Unauthorized - Token may be expired or invalid');
-        
-        // ลบ token ที่หมดอายุ
-        localStorage.removeItem('token');
-        sessionStorage.removeItem('token');
-        
-        setSaveError('หมดเวลาใช้งาน กรุณาเข้าสู่ระบบใหม่');
-        return;
-      }
-      
       const errorMessage = error.response?.data?.detail || 
                           error.response?.data?.error || 
                           error.response?.data?.message ||
@@ -285,33 +223,12 @@ const RecordBottomBar = ({
       
       setSaveError(errorMessage);
       
-      // *** ไม่ redirect ไปหน้า history ถ้า error เพื่อให้ user แก้ไขได้ ***
-      
     } finally {
       setIsSaving(false);
     }
   };
 
-  // *** ป้องกันการแสดงปุ่มถ้าไม่ได้ authenticated ***
-  const authToken = token || localStorage.getItem('token') || sessionStorage.getItem('token');
-  if (!isAuthenticated || !user || !authToken) {
-    return (
-      <div className="w-full py-4 px-4 flex justify-center border-t">
-        <div className="text-center">
-          <div className="text-gray-500 text-sm mb-2">
-            กรุณาเข้าสู่ระบบเพื่อบันทึกข้อมูล
-          </div>
-          <button 
-            onClick={() => navigate('/login')}
-            className="px-4 py-2 bg-[#990000] text-white rounded text-sm"
-          >
-            เข้าสู่ระบบ
-          </button>
-        </div>
-      </div>
-    );
-  }
-
+  // ✅ ลบการตรวจสอบ authentication ออกทั้งหมด - แสดงปุ่มบันทึกเสมอ
   return (
     <div className="w-full py-4 px-4 flex justify-between border-t sm:justify-end sm:space-x-4">
       {saveError && (
