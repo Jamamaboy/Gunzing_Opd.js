@@ -4,11 +4,11 @@ import json
 import numpy as np
 from io import BytesIO
 from fastapi import UploadFile, HTTPException
-from core.config import get_ml_service_url
+from core.config import get_ai_service_url
 
 class AIImageSearchService:
     def __init__(self):
-        self.ai_service_url = get_ml_service_url()
+        self.ai_service_url = get_ai_service_url()
     
     async def segment_drug_image(self, file: UploadFile):
         """ทำ segmentation เพื่อแยกส่วนที่เป็นยาเสพติด"""

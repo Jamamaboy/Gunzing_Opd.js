@@ -69,13 +69,15 @@ if IS_PRODUCTION:
         "http://localhost",      # สำหรับ local container
         "http://localhost:80",   # สำหรับ local container
         "http://frontend:80",    # สำหรับ container network
-        "http://frontend"        # สำหรับ container network
+        "http://frontend",
+        "https://frontend.ashyisland-0d4cc8a1.australiaeast.azurecontainerapps.io"
     ]
 else:
     allowed_origins = [
         "http://localhost:5173",
         "http://localhost:3000",
-        "http://frontend:5173"
+        "http://frontend:5173",
+        "https://frontend.ashyisland-0d4cc8a1.australiaeast.azurecontainerapps.io"
     ]
 
 # ตั้งค่า CORS

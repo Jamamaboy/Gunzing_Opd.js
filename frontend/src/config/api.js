@@ -1,43 +1,18 @@
 import axios from 'axios';
 
-// ตรวจสอบ environment และกำหนด API URL ที่เหมาะสม
-const getApiUrl = () => {
-  const envApiUrl = import.meta.env.VITE_API_URL;
-  const isProduction = import.meta.env.MODE === 'production';
-  const isDocker = window.location.hostname === 'localhost' && window.location.port === '80';
-  
-  console.log('=== API Configuration ===');
-  console.log('Environment:', import.meta.env.MODE);
-  console.log('VITE_API_URL:', envApiUrl);
-  console.log('Is Production:', isProduction);
-  console.log('Is Docker:', isDocker);
-  console.log('Current hostname:', window.location.hostname);
-  console.log('Current port:', window.location.port);
-  
-  // ถ้าเป็น production และอยู่ใน Docker ให้ใช้ localhost:8000
-  if (isProduction && isDocker) {
-    console.log('Using localhost:8000 for Docker production');
-    return 'http://localhost:8000';
-  }
-  
-  // ถ้าเป็น development ให้ใช้ localhost:8000
-  if (!isProduction) {
-    console.log('Using localhost:8000 for development');
-    return 'http://localhost:8000';
-  }
-  
-  // กรณีอื่นๆ ใช้ค่าใน environment
-  console.log('Using environment API URL:', envApiUrl);
-  return envApiUrl || 'http://localhost:8000';
-};
+// ✅ อ่าน API URL จาก .env เท่านั้น
+const API_URL = import.meta.env.VITE_API_URL;
 
-const API_URL = getApiUrl();
-
-console.log(`Final API_URL: ${API_URL}`);
+console.log('=== API Configuration ===');
+console.log('Environment:', import.meta.env.MODE);
+console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
+console.log('Final API_URL:', API_URL);
+console.log('==========================');
 
 export const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,
+  timeout: 120000, // ✅ เพิ่ม timeout สำหรับยาเสพติด
   headers: {
     'Content-Type': 'application/json',
   }
@@ -50,7 +25,6 @@ api.interceptors.request.use(
     console.log("=== API Request Debug ===");
     console.log("URL:", config.url);
     console.log("Method:", config.method);
-    console.log("Cookies:", document.cookie);
     console.log("Base URL:", config.baseURL);
     console.log("=========================");
 
@@ -79,8 +53,8 @@ api.interceptors.response.use(
     // Debug information
     console.log("=== API Response Debug ===");
     console.log("Status:", response.status);
-    console.log("Headers:", response.headers);
-    console.log("=========================");
+    console.log("Data keys:", Object.keys(response.data || {}));
+    console.log("==========================");
 
     return response;
   },
@@ -88,8 +62,8 @@ api.interceptors.response.use(
     console.error("=== API Error Interceptor ===");
     console.error("Error status:", error.response?.status);
     console.error("Error message:", error.message);
-    console.error("Error config:", error.config);
-    console.error("=============================");
+    console.error("Error URL:", error.config?.url);
+    console.error("==============================");
 
     if (error.response?.status === 401) {
       console.log("401 Unauthorized detected, attempting token refresh...");
@@ -128,7 +102,6 @@ api.interceptors.response.use(
           console.error("Token refresh failed:", refreshError);
           
           // ถ้า refresh ไม่สำเร็จ ให้ redirect ไปหน้า login
-          // แต่ตรวจสอบก่อนว่าไม่ได้อยู่ที่หน้า login อยู่แล้ว
           if (!window.location.pathname.includes('/login')) {
             console.log("Redirecting to login page due to authentication failure");
             window.location.href = '/login';
