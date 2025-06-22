@@ -45,7 +45,8 @@ const EvidenceProfile = () => {
       type: '',
       result: null,
       details: null,
-      imageUrl: null
+      imageUrl: null,
+      originalImageUrl: null // ✅ เพิ่มสำหรับเก็บภาพต้นฉบับ
     };
 
     if (location.state?.evidence) {
@@ -53,11 +54,13 @@ const EvidenceProfile = () => {
       return location.state.evidence;
     }
     
+    // ✅ รองรับภาพที่ crop แล้วจาก CandidateShow
     if (location.state?.type) {
       initialData = {
         type: location.state.type,
         result: location.state.result,
-        imageUrl: localStorage.getItem('analysisImage')
+        imageUrl: location.state.image || localStorage.getItem('analysisImage'), // ✅ ใช้ภาพที่ crop แล้ว
+        originalImageUrl: location.state.originalImage || localStorage.getItem('analysisImage') // ✅ เก็บภาพต้นฉบับ
       };
       inMemoryEvidenceStore = initialData;
       return initialData;
@@ -69,10 +72,16 @@ const EvidenceProfile = () => {
         const result = JSON.parse(savedResult);
         const type = localStorage.getItem('selectedEvidenceType') || 
                     (result.hasOwnProperty('prediction') ? 'Drug' : 'Gun');
+        
+        // ✅ ตรวจสอบว่าใน localStorage มีภาพที่ crop แล้วหรือไม่
+        const analysisImage = localStorage.getItem('analysisImage');
+        const croppedImage = localStorage.getItem('croppedAnalysisImage'); // ถ้ามีการเก็บแยก
+        
         initialData = { 
           type, 
           result,
-          imageUrl: localStorage.getItem('analysisImage')
+          imageUrl: croppedImage || analysisImage, // ✅ ให้ความสำคัญกับภาพที่ crop แล้ว
+          originalImageUrl: analysisImage // ✅ เก็บภาพต้นฉบับ
         };
         inMemoryEvidenceStore = initialData;
         return initialData;
@@ -85,7 +94,8 @@ const EvidenceProfile = () => {
         return {
           type: evidenceType || '',
           result: null,
-          imageUrl: imageUrl
+          imageUrl: imageUrl,
+          originalImageUrl: imageUrl // ✅ ถ้าไม่มีภาพที่ crop แล้ว ใช้ภาพเดิม
         };
       }
     } catch (error) {
@@ -367,6 +377,8 @@ const EvidenceProfile = () => {
             isLoading={isLoading}
             apiError={apiError}
             isMobile={isMobile}
+            imageUrl={evidence.imageUrl} // ✅ ส่งภาพที่ crop แล้ว
+            originalImageUrl={evidence.originalImageUrl} // ✅ ส่งภาพต้นฉบับ
           />
         );
       case 'Drug':
@@ -374,14 +386,17 @@ const EvidenceProfile = () => {
           evidence={evidence.details}
           analysisResult={evidence.result} 
           isMobile={isMobile}
+          imageUrl={evidence.imageUrl} // ✅ ส่งภาพที่ crop แล้ว
+          originalImageUrl={evidence.originalImageUrl} // ✅ ส่งภาพต้นฉบับ
         />;
       case 'Unknown':
         return <div className="p-4 text-gray-600">
           <h3 className="text-lg font-medium mb-2">วัตถุพยานไม่ทราบชนิด</h3>
           <p>ไม่สามารถระบุชนิดของวัตถุพยานนี้ได้</p>
-          {evidence.imageUrl && (
+          {/* ✅ ใช้ภาพที่ crop แล้ว หรือภาพต้นฉบับถ้าไม่มี */}
+          {(evidence.imageUrl || evidence.originalImageUrl) && (
             <div className="mt-4">
-              <img src={evidence.imageUrl} alt="Unknown evidence" 
+              <img src={evidence.imageUrl || evidence.originalImageUrl} alt="Unknown evidence" 
                 className={`${isMobile ? 'w-full max-h-48' : 'w-full max-h-64'} object-contain rounded-lg`} />
             </div>
           )}
@@ -396,7 +411,12 @@ const EvidenceProfile = () => {
       case 0:
         return renderBasicInfo();
       case 1:
-        return <Gallery evidence={evidence?.details} isMobile={isMobile} />;
+        return <Gallery 
+          evidence={evidence?.details} 
+          isMobile={isMobile} 
+          userImage={evidence?.imageUrl} // ✅ ส่งภาพที่ crop แล้ว
+          originalImage={evidence?.originalImageUrl} // ✅ ส่งภาพต้นฉบับ
+        />;
       case 2:
         return <History evidence={evidence?.details} isMobile={isMobile} />;
       case 3:

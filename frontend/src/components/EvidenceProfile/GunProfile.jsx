@@ -3,11 +3,14 @@ import { IoClose } from 'react-icons/io5';
 import { PiImageBroken } from "react-icons/pi";
 import DownloadButton from '../shared/DownloadButton';
 
-const GunProfile = ({ evidence, analysisResult, isLoading, apiError }) => {
+const GunProfile = ({ evidence, analysisResult, isLoading, apiError, imageUrl, originalImageUrl }) => {
   const [showShareNotification, setShowShareNotification] = useState(false);
   const [fullScreen, setFullScreen] = useState(false);
+  const [showOriginalImage, setShowOriginalImage] = useState(false); // ✅ เพิ่ม state สำหรับสลับภาพ
 
-  const imageUrl = localStorage.getItem('analysisImage');
+  // ✅ ใช้ภาพที่ส่งมาจาก props หรือ localStorage เป็น fallback
+  const displayImageUrl = imageUrl || localStorage.getItem('analysisImage');
+  const originalDisplayImageUrl = originalImageUrl || localStorage.getItem('analysisImage') || displayImageUrl;
 
   const confidence = analysisResult && analysisResult.confidence
     ? Math.round(analysisResult.confidence * 100)
@@ -107,22 +110,42 @@ const GunProfile = ({ evidence, analysisResult, isLoading, apiError }) => {
     );
   };
 
+  // ✅ ฟังก์ชันสลับภาพ
+  const toggleImageView = () => {
+    setShowOriginalImage(!showOriginalImage);
+  };
+
+  // ✅ component สำหรับปุ่มสลับภาพ
+  const ImageToggleButton = () => (
+    originalDisplayImageUrl && originalDisplayImageUrl !== displayImageUrl ? (
+      <button
+        onClick={toggleImageView}
+        className="absolute top-2 left-2 px-3 py-1 bg-black/50 text-white rounded-full text-xs hover:bg-black/70 transition-colors z-10"
+      >
+        {showOriginalImage ? '🔍 ภาพที่ตัด' : '📷 ภาพต้นฉบับ'}
+      </button>
+    ) : null
+  );
+
   // Desktop version
   const DesktopView = () => (
     <div className="hidden md:flex flex-row h-full w-full">
       {/* Left column - Gun image */}
-      <div className="w-1/2 p-6 flex justify-center items-center">
-        {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt="อาวุธปืน"
-            className="max-w-full h-auto object-contain max-h-96 cursor-pointer"
-            onClick={() => setFullScreen(true)}
-            onError={(e) => {
-              e.target.style.display = 'none';
-              e.target.nextElementSibling.style.display = 'flex';
-            }}
-          />
+      <div className="w-1/2 p-6 flex justify-center items-center relative">
+        {displayImageUrl ? (
+          <>
+            <img
+              src={showOriginalImage ? originalDisplayImageUrl : displayImageUrl}
+              alt="อาวุธปืน"
+              className="max-w-full h-auto object-contain max-h-96 cursor-pointer"
+              onClick={() => setFullScreen(true)}
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextElementSibling.style.display = 'flex';
+              }}
+            />
+            <ImageToggleButton />
+          </>
         ) : (
           <NoImageDisplay />
         )}
@@ -248,18 +271,21 @@ const GunProfile = ({ evidence, analysisResult, isLoading, apiError }) => {
   const MobileView = () => (
     <div className="flex md:hidden flex-col h-full px-4">
       {/* Gun image */}
-      <div className="p-4 flex justify-center items-center">
-        {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt="อาวุธปืน"
-            className="max-w-full h-auto object-contain max-h-60 cursor-pointer"
-            onClick={() => setFullScreen(true)}
-            onError={(e) => {
-              e.target.style.display = 'none';
-              e.target.nextElementSibling.style.display = 'flex';
-            }}
-          />
+      <div className="p-4 flex justify-center items-center relative">
+        {displayImageUrl ? (
+          <>
+            <img
+              src={showOriginalImage ? originalDisplayImageUrl : displayImageUrl}
+              alt="อาวุธปืน"
+              className="max-w-full h-auto object-contain max-h-60 cursor-pointer"
+              onClick={() => setFullScreen(true)}
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextElementSibling.style.display = 'flex';
+              }}
+            />
+            <ImageToggleButton />
+          </>
         ) : (
           <NoImageDisplay />
         )}
@@ -403,9 +429,19 @@ const GunProfile = ({ evidence, analysisResult, isLoading, apiError }) => {
       <DesktopView />
       <MobileView />
 
-      {/* Full Screen Modal for Image */}
-      {fullScreen && imageUrl && (
+      {/* ✅ แก้ไข Full Screen Modal */}
+      {fullScreen && displayImageUrl && (
         <div className="fixed inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center z-50">
+          {/* ✅ เพิ่มปุ่มสลับภาพใน fullscreen */}
+          {originalDisplayImageUrl && originalDisplayImageUrl !== displayImageUrl && (
+            <button 
+              className="absolute top-4 left-4 text-white text-base px-3 py-2 bg-gray-800 rounded-full hover:bg-gray-700 transition-colors"
+              onClick={toggleImageView}
+            >
+              {showOriginalImage ? '🔍 ภาพที่ตัด' : '📷 ภาพต้นฉบับ'}
+            </button>
+          )}
+          
           {/* ปุ่มปิด Full Screen */}
           <button 
             className="absolute top-4 right-4 text-white text-3xl p-2 bg-gray-800 rounded-full"
@@ -414,8 +450,20 @@ const GunProfile = ({ evidence, analysisResult, isLoading, apiError }) => {
             <IoClose />
           </button>
           
-          {/* ภาพที่ขยายเต็มจอ */}
-          <img src={imageUrl} alt="Full Screen" className="max-w-full max-h-[80vh] object-contain mb-4 px-4" />
+          {/* ✅ แสดงภาพตามที่เลือก */}
+          <img 
+            src={showOriginalImage ? originalDisplayImageUrl : displayImageUrl} 
+            alt="Full Screen" 
+            className="max-w-full max-h-[80vh] object-contain mb-4 px-4" 
+          />
+          
+          {/* ✅ แสดงสถานะภาพ */}
+          <div className="px-3 py-1 bg-black/70 text-white rounded-full text-sm">
+            🔫 อาวุธปืน
+            <span className="ml-2 text-gray-300">
+              ({showOriginalImage ? 'ภาพต้นฉบับ' : 'ภาพที่ตัดแล้ว'})
+            </span>
+          </div>
         </div>
       )}
 

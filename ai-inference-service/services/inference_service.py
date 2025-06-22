@@ -3,6 +3,7 @@ import cv2
 import traceback
 import tempfile
 import logging
+import base64
 from ml_managers.ai_model_manager import get_model_manager
 from services.gun_service import analyze_gun_brand, analyze_gun_model
 from services.narcotic_service import analyze_drug
@@ -28,17 +29,33 @@ def process_image_with_gun_models(image_path):
     processed_objects = []
     temp_files = []
     
+    # ✅ เพิ่มตัวแปรเก็บภาพที่ crop แล้วจากการ segment หลัก
+    main_cropped_images = {}
+    
     for obj in segmented_objects:
         logger.info(f"Processing object: {obj['class_name']} (confidence: {obj['confidence']})")
         temp_path = save_temp_image(obj["cropped_image"], image_path, obj["index"], obj["class_name"])
         temp_files.append(temp_path)
         
+        # ✅ แปลงภาพที่ crop แล้วเป็น base64
+        _, buffer = cv2.imencode('.jpg', obj["cropped_image"])
+        cropped_image_base64 = base64.b64encode(buffer).decode('utf-8')
+        cropped_image_data_url = f"data:image/jpeg;base64,{cropped_image_base64}"
+        
         obj_data = {
             "object_index": obj["index"],
             "class": obj["class_name"],
             "confidence": obj["confidence"],
-            "cropped_path": temp_path
+            "cropped_path": temp_path,
+            "cropped_image_base64": cropped_image_base64,  # ✅ เพิ่มภาพ base64
+            "cropped_image_data_url": cropped_image_data_url  # ✅ เพิ่ม data URL
         }
+        
+        # ✅ เก็บภาพหลักสำหรับแต่ละประเภท
+        if obj["class_name"] in ['Drug', 'PackageDrug']:
+            main_cropped_images['drug'] = cropped_image_data_url
+        elif obj["class_name"] in ['BigGun', 'Pistol', 'Revolver']:
+            main_cropped_images['gun'] = cropped_image_data_url
         
         if obj["class_name"] in ['BigGun', 'Pistol', 'Revolver']:
             logger.info(f"Analyzing gun brand for {obj['class_name']}")
@@ -62,10 +79,15 @@ def process_image_with_gun_models(image_path):
             os.remove(temp_file)
     
     logger.info(f"Processing complete. Found {len(processed_objects)} objects")
-    return {
+    
+    # ✅ เพิ่มภาพที่ crop แล้วใน response
+    result = {
         "original_image": image_path,
-        "detected_objects": processed_objects
+        "detected_objects": processed_objects,
+        "main_cropped_images": main_cropped_images  # ✅ เพิ่มภาพหลักที่ตัดแล้ว
     }
+    
+    return result
 
 async def analyze_image_service(image_path: str):
     """

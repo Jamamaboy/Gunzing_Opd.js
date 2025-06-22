@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { IoClose } from 'react-icons/io5';
 import { PiImageBroken } from "react-icons/pi";
 
-const Gallery = ({ evidence, firearmInfo }) => {
+const Gallery = ({ evidence, firearmInfo, userImage, originalImage }) => {
   const evidenceData = evidence;
-  const userImage = localStorage.getItem('analysisImage') || null;
+  // ✅ ใช้ภาพจาก props หรือ localStorage เป็น fallback
+  const displayUserImage = userImage || localStorage.getItem('analysisImage') || null;
+  const originalUserImage = originalImage || localStorage.getItem('analysisImage') || displayUserImage;
   
   const [galleryImages, setGalleryImages] = useState([]);
+  const [showOriginalImage, setShowOriginalImage] = useState(false); // ✅ เพิ่ม state สำหรับสลับภาพ
   
   useEffect(() => {
     let images = [];
@@ -57,17 +60,28 @@ const Gallery = ({ evidence, firearmInfo }) => {
   }, [firearmInfo, evidenceData]);
   
   const [selectedGalleryImage, setSelectedGalleryImage] = useState(null);
-  
-  useEffect(() => {
-    if (galleryImages.length > 0 && !selectedGalleryImage) {
-      setSelectedGalleryImage(galleryImages[0]);
-    }
-  }, [galleryImages, selectedGalleryImage]);
-  
-  const userImageSrc = userImage;
-  const galleryImageSrc = selectedGalleryImage?.url;
   const [fullScreen, setFullScreen] = useState(false);
   const [galleryFullScreen, setGalleryFullScreen] = useState(false);
+  
+  // ✅ เพิ่มฟังก์ชันสลับภาพ
+  const toggleImageView = () => {
+    setShowOriginalImage(!showOriginalImage);
+  };
+
+  // ✅ เพิ่ม component สำหรับปุ่มสลับภาพ
+  const ImageToggleButton = () => (
+    originalUserImage && originalUserImage !== displayUserImage ? (
+      <button
+        onClick={toggleImageView}
+        className="absolute top-2 left-2 px-3 py-1 bg-black/50 text-white rounded-full text-xs hover:bg-black/70 transition-colors z-10"
+      >
+        {showOriginalImage ? '🔍 ภาพที่ตัด' : '📷 ภาพต้นฉบับ'}
+      </button>
+    ) : null
+  );
+
+  const userImageSrc = showOriginalImage ? originalUserImage : displayUserImage;
+  const galleryImageSrc = selectedGalleryImage?.url;
   
   const NoImageDisplay = ({ message = "การแสดงผลภาพถ่ายมีปัญหา", subMessage = "ไม่พบภาพที่บันทึกไว้" }) => (
     <div className="flex flex-col items-center justify-center p-6 bg-gray-50 rounded-lg border border-gray-200 h-64 w-full">
@@ -85,23 +99,36 @@ const Gallery = ({ evidence, firearmInfo }) => {
           <div className="p-3">
             <h3 className="text-base font-medium block pb-2 border-b-2 border-gray-200">ภาพถ่าย</h3>
           </div>
-          <div className="flex justify-center items-center py-4">
-            {userImage ? (
-              <img 
-                src={userImageSrc} 
-                alt="ภาพวัตถุพยานที่ถ่าย" 
-                className="w-full h-auto object-contain max-h-64"
-                onClick={() => setFullScreen(true)}
-              />
+          <div className="relative flex justify-center items-center py-4">
+            {displayUserImage ? (
+              <>
+                <img 
+                  src={userImageSrc} 
+                  alt="ภาพวัตถุพยานที่ถ่าย" 
+                  className="w-full h-auto object-contain max-h-64"
+                  onClick={() => setFullScreen(true)}
+                />
+                <ImageToggleButton />
+              </>
             ) : (
               <NoImageDisplay />
             )}
           </div>
         </div>
 
-        {/* Full Screen Modal for User Image */}
-        {fullScreen && userImage && (
+        {/* ✅ แก้ไข Full Screen Modal for User Image */}
+        {fullScreen && displayUserImage && (
           <div className="fixed inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center z-50">
+            {/* ✅ เพิ่มปุ่มสลับภาพใน fullscreen */}
+            {originalUserImage && originalUserImage !== displayUserImage && (
+              <button 
+                className="absolute top-4 left-4 text-white text-base px-3 py-2 bg-gray-800 rounded-full hover:bg-gray-700 transition-colors"
+                onClick={toggleImageView}
+              >
+                {showOriginalImage ? '🔍 ภาพที่ตัด' : '📷 ภาพต้นฉบับ'}
+              </button>
+            )}
+            
             {/* ปุ่มปิด Full Screen */}
             <button 
               className="absolute top-4 right-4 text-white text-3xl p-2 bg-gray-800 rounded-full"
@@ -110,8 +137,22 @@ const Gallery = ({ evidence, firearmInfo }) => {
               <IoClose />
             </button>
             
-            {/* ภาพที่ขยายเต็มจอ */}
-            <img src={userImage} alt="Full Screen" className="max-w-full max-h-[80vh] object-contain mb-4 px-4" />
+            {/* ✅ แสดงภาพตามที่เลือก */}
+            <img 
+              src={userImageSrc} 
+              alt="Full Screen" 
+              className="max-w-full max-h-[80vh] object-contain mb-4 px-4" 
+            />
+            
+            {/* ✅ แสดงสถานะภาพ */}
+            <div className="px-3 py-1 bg-black/70 text-white rounded-full text-sm">
+              📷 ภาพหลักฐาน
+              {originalUserImage && originalUserImage !== displayUserImage && (
+                <span className="ml-2 text-gray-300">
+                  ({showOriginalImage ? 'ภาพต้นฉบับ' : 'ภาพที่ตัดแล้ว'})
+                </span>
+              )}
+            </div>
           </div>
         )}
         
@@ -183,24 +224,35 @@ const Gallery = ({ evidence, firearmInfo }) => {
           <div className="p-3">
             <h3 className="text-base font-medium inline-block pb-2 border-b-2 border-gray-200 w-full">ภาพถ่ายหลักฐาน</h3>
           </div>
-          <div className="flex justify-center items-center p-4">
-            {userImage ? (
-              <img 
-                src={userImageSrc} 
-                alt="ภาพวัตถุพยานที่ถ่าย" 
-                className="w-full h-auto max-h-96 object-contain cursor-pointer"
-                onClick={() => setFullScreen(true)}
-              />
+          <div className="relative flex justify-center items-center p-4">
+            {displayUserImage ? (
+              <>
+                <img 
+                  src={userImageSrc} 
+                  alt="ภาพวัตถุพยานที่ถ่าย" 
+                  className="w-full h-auto max-h-96 object-contain cursor-pointer"
+                  onClick={() => setFullScreen(true)}
+                />
+                <ImageToggleButton />
+              </>
             ) : (
               <NoImageDisplay />
             )}
           </div>
         </div>
 
-        {/* Full Screen Modal for User Image */}
-        {fullScreen && userImage && (
+        {/* ✅ แก้ไข Full Screen Modal for User Image (เหมือนกับ mobile) */}
+        {fullScreen && displayUserImage && (
           <div className="fixed inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center z-50">
-            {/* ปุ่มปิด Full Screen */}
+            {originalUserImage && originalUserImage !== displayUserImage && (
+              <button 
+                className="absolute top-4 left-4 text-white text-base px-3 py-2 bg-gray-800 rounded-full hover:bg-gray-700 transition-colors"
+                onClick={toggleImageView}
+              >
+                {showOriginalImage ? '🔍 ภาพที่ตัด' : '📷 ภาพต้นฉบับ'}
+              </button>
+            )}
+            
             <button 
               className="absolute top-4 right-4 text-white text-3xl p-2 bg-gray-800 rounded-full"
               onClick={() => setFullScreen(false)}
@@ -208,8 +260,20 @@ const Gallery = ({ evidence, firearmInfo }) => {
               <IoClose />
             </button>
             
-            {/* ภาพที่ขยายเต็มจอ */}
-            <img src={userImage} alt="Full Screen" className="max-w-full max-h-[80vh] object-contain mb-4 px-4" />
+            <img 
+              src={userImageSrc} 
+              alt="Full Screen" 
+              className="max-w-full max-h-[80vh] object-contain mb-4 px-4" 
+            />
+            
+            <div className="px-3 py-1 bg-black/70 text-white rounded-full text-sm">
+              📷 ภาพหลักฐาน
+              {originalUserImage && originalUserImage !== displayUserImage && (
+                <span className="ml-2 text-gray-300">
+                  ({showOriginalImage ? 'ภาพต้นฉบับ' : 'ภาพที่ตัดแล้ว'})
+                </span>
+              )}
+            </div>
           </div>
         )}
 

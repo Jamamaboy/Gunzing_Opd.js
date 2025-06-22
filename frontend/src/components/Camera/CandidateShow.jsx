@@ -21,6 +21,7 @@ const CandidateShow = () => {
   const [candidates, setCandidates] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [imageUrl, setImageUrl] = useState('');
+  const [originalImageUrl, setOriginalImageUrl] = useState(''); // ✅ เพิ่มสำหรับภาพต้นฉบับ
   const [detectionType, setDetectionType] = useState('');
   const [fromCamera, setFromCamera] = useState(false);
   const [sourcePath, setSourcePath] = useState('');
@@ -28,6 +29,7 @@ const CandidateShow = () => {
   const [brandData, setBrandData] = useState([]);
   const [isUnknownObject, setIsUnknownObject] = useState(false);
   const [fullScreen, setFullScreen] = useState(false);
+  const [showOriginalInFullScreen, setShowOriginalInFullScreen] = useState(false); // ✅ เพิ่มสำหรับควบคุมภาพในโหมด fullscreen
   const [gunReferenceImages, setGunReferenceImages] = useState({ default: '' });
   const [isLoadingImages, setIsLoadingImages] = useState(true);
   const [selectedNarcoticDetails, setSelectedNarcoticDetails] = useState(null);
@@ -129,7 +131,7 @@ const CandidateShow = () => {
       console.log("=== CandidateShow DEBUG ===");
       console.log("Location state:", location.state);
       
-      const { analysisResult, result, image, fromCamera, sourcePath } = location.state;
+      const { analysisResult, result, image, originalImage, fromCamera, sourcePath } = location.state;
       const data = analysisResult || result || {};
       
       console.log("Data received:", data);
@@ -138,7 +140,10 @@ const CandidateShow = () => {
       console.log("Candidates:", data.candidates);
       console.log("Detected objects:", data.detected_objects);
       
+      // ✅ ตั้งค่าภาพ - ใช้ภาพที่ crop แล้วเป็นหลัก และเก็บภาพต้นฉบับไว้
       setImageUrl(image || localStorage.getItem('analysisImage'));
+      setOriginalImageUrl(originalImage || localStorage.getItem('analysisImage') || image);
+      
       setFromCamera(fromCamera || false);
       setSourcePath(sourcePath || '');
       setIsUnknownObject(false);
@@ -515,6 +520,25 @@ const CandidateShow = () => {
     });
   }, [narcoticsDetails]);
 
+  // ✅ แก้ไขฟังก์ชันสำหรับสลับระหว่างภาพที่ crop แล้วกับภาพต้นฉบับ
+  const toggleImageView = () => {
+    if (showOriginalInFullScreen) {
+      setShowOriginalInFullScreen(false);
+    } else {
+      setShowOriginalInFullScreen(true);
+    }
+  };
+
+  // ✅ เพิ่มปุ่มสำหรับสลับภาพใน UI
+  const ImageToggleButton = () => (
+    <button
+      onClick={toggleImageView}
+      className="absolute top-2 left-2 px-3 py-1 bg-black/50 text-white rounded-full text-xs hover:bg-black/70 transition-colors"
+    >
+      {showOriginalInFullScreen ? '🔍 ภาพที่ตัด' : '📷 ภาพต้นฉบับ'}
+    </button>
+  );
+
   return (
     <div className="flex flex-col h-screen max-h-screen bg-white">
       {/* Header */}
@@ -529,12 +553,19 @@ const CandidateShow = () => {
       <div className="p-4 border-b shrink-0">
         {imageUrl ? (
           <div className={`relative w-full ${getImageHeight()}`}>
+            {/* ✅ แสดงภาพที่ crop แล้วเป็นหลัก */}
             <img 
-              src={imageUrl} 
+              src={showOriginalInFullScreen && fullScreen ? originalImageUrl : imageUrl} 
               alt="Evidence" 
               className="w-full h-full object-contain rounded-lg cursor-pointer" 
               onClick={() => setFullScreen(true)}
             />
+            
+            {/* ✅ เพิ่มปุ่มสลับภาพเมื่อไม่ได้อยู่ในโหมด fullscreen */}
+            {!fullScreen && originalImageUrl && originalImageUrl !== imageUrl && (
+              <ImageToggleButton />
+            )}
+            
             <div className={`absolute top-2 right-2 px-3 py-1 bg-black/50 text-white rounded-full ${isMobile ? 'text-xs' : 'text-sm'}`}>
               {detectionType === 'Gun' ? '🔫 อาวุธปืน' : 
                detectionType === 'Drug' ? '💊 ยาเสพติด' : 
@@ -816,24 +847,43 @@ const CandidateShow = () => {
       {/* Full Screen Modal for Image */}
       {fullScreen && imageUrl && (
         <div className="fixed inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center z-50">
+          {/* ✅ ปุ่มสลับภาพในโหมด fullscreen */}
+          {originalImageUrl && originalImageUrl !== imageUrl && (
+            <button 
+              className={`absolute top-4 left-4 text-white ${isMobile ? 'text-sm' : 'text-base'} px-3 py-2 bg-gray-800 rounded-full hover:bg-gray-700 transition-colors`}
+              onClick={toggleImageView}
+            >
+              {showOriginalInFullScreen ? '🔍 ภาพที่ตัด' : '📷 ภาพต้นฉบับ'}
+            </button>
+          )}
+          
           {/* ปุ่มปิด Full Screen */}
           <button 
             className={`absolute top-4 right-4 text-white ${isMobile ? 'text-2xl' : 'text-3xl'} p-2 bg-gray-800 rounded-full`}
-            onClick={() => setFullScreen(false)}
+            onClick={() => {
+              setFullScreen(false);
+              setShowOriginalInFullScreen(false); // ✅ รีเซ็ตเมื่อปิด fullscreen
+            }}
           >
             <IoClose />
           </button>
-          {/* ภาพที่ขยายเต็มจอ */}
+          
+          {/* ✅ แสดงภาพตามที่เลือก */}
           <img 
-            src={imageUrl} 
+            src={showOriginalInFullScreen ? originalImageUrl : imageUrl} 
             alt="Full Screen" 
             className={`max-w-full ${isMobile ? 'max-h-[70vh]' : 'max-h-[80vh]'} object-contain mb-4 px-4`} 
           />
+          
           {/* Optional: Display what type of evidence is being shown */}
           <div className={`px-3 py-1 bg-black/70 text-white rounded-full ${isMobile ? 'text-xs' : 'text-sm'}`}>
             {detectionType === 'Gun' ? '🔫 อาวุธปืน' : 
              detectionType === 'Drug' ? '💊 ยาเสพติด' : 
              '❓ วัตถุพยานที่ไม่รู้จัก'}
+            {/* ✅ แสดงสถานะภาพที่กำลังดู */}
+            <span className="ml-2 text-gray-300">
+              ({showOriginalInFullScreen ? 'ภาพต้นฉบับ' : 'ภาพที่ตัดแล้ว'})
+            </span>
           </div>
         </div>
       )}

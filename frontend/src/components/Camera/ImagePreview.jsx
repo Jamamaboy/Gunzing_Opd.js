@@ -165,7 +165,7 @@ const ImagePreview = () => {
             'Content-Type': 'multipart/form-data',
           },
           signal: controller.signal,
-          timeout: 120000 // ✅ เพิ่ม timeout สำหรับยาเสพติด
+          timeout: 120000
         });
         
         clearTimeout(timeoutId);
@@ -185,10 +185,20 @@ const ImagePreview = () => {
         console.log("Result:", result);
         console.log("Detection type:", result.detectionType);
         console.log("Detected objects:", result.detected_objects);
+        console.log("Main cropped images:", result.main_cropped_images); // ✅ Log ภาพที่ crop แล้ว
+      
+        // ✅ เก็บภาพที่ crop แล้วไว้ใช้ในหน้า CandidateShow
+        let croppedImageForDisplay = imageData; // ใช้ภาพต้นฉบับเป็น fallback
         
         // ตรวจสอบว่าเป็นอาวุธปืนหรือไม่
         if (result.detectionType === 'firearm' && result.detected_objects) {
           console.log("=== Processing Firearm Data ===");
+          
+          // ✅ ใช้ภาพปืนที่ crop แล้วถ้ามี
+          if (result.main_cropped_images && result.main_cropped_images.gun) {
+            croppedImageForDisplay = result.main_cropped_images.gun;
+            console.log("Using cropped gun image for display");
+          }
           
           // สร้าง brandData จาก detected_objects
           const brands = {};
@@ -277,6 +287,12 @@ const ImagePreview = () => {
         // ✅ ประมวลผลยาเสพติด
         else if (result.detectionType === 'narcotic' && result.detected_objects) {
           console.log("=== Processing Narcotic Data ===");
+          
+          // ✅ ใช้ภาพยาเสพติดที่ crop แล้วถ้ามี
+          if (result.main_cropped_images && result.main_cropped_images.drug) {
+            croppedImageForDisplay = result.main_cropped_images.drug;
+            console.log("Using cropped drug image for display");
+          }
           
           const drugCandidates = [];
           
@@ -387,11 +403,13 @@ const ImagePreview = () => {
         
         localStorage.setItem('analysisResult', JSON.stringify(result));
 
+        // ✅ ส่งภาพที่ crop แล้วไปยัง CandidateShow
         navigate('/candidateShow', { 
           state: { 
             result: result,
             analysisResult: result,
-            image: imageData,
+            image: croppedImageForDisplay, // ✅ ใช้ภาพที่ crop แล้ว
+            originalImage: imageData, // ✅ เก็บภาพต้นฉบับไว้ใช้ในกรณีจำเป็น
             fromCamera: fromCamera,
             uploadFromCameraPage: location.state?.uploadFromCameraPage || false,
             sourcePath: location.state?.sourcePath || -1
