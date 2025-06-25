@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+FROM python:3.10-slim-bookworm
 
 # ติดตั้ง dependencies สำหรับ PostgreSQL
 RUN apt-get update && apt-get install -y \

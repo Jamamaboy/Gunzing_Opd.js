@@ -66,18 +66,20 @@ IS_PRODUCTION = ENVIRONMENT.lower() == "production"
 # กำหนด allowed origins ตาม environment
 if IS_PRODUCTION:
     allowed_origins = [
-        "http://localhost",      # สำหรับ local container
-        "http://localhost:80",   # สำหรับ local container
-        "http://frontend:80",    # สำหรับ container network
-        "http://frontend",
-        "https://frontend.ashyisland-0d4cc8a1.australiaeast.azurecontainerapps.io"
+        # "http://localhost",
+        # "http://localhost:80",
+        # "http://frontend:80",
+        # "http://frontend",
+        "https://frontend.bluemoss-27953129.australiaeast.azurecontainerapps.io",
+        "https://ai-inference-service.bluemoss-27953129.australiaeast.azurecontainerapps.io"
     ]
 else:
     allowed_origins = [
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "http://frontend:5173",
-        "https://frontend.ashyisland-0d4cc8a1.australiaeast.azurecontainerapps.io"
+        # "http://localhost:5173",
+        # "http://localhost:3000",
+        # "http://frontend:5173",
+        "https://frontend.bluemoss-27953129.australiaeast.azurecontainerapps.io",
+        "https://ai-inference-service.bluemoss-27953129.australiaeast.azurecontainerapps.io"
     ]
 
 # ตั้งค่า CORS
