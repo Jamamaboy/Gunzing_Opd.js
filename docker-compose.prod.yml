@@ -1,53 +1,45 @@
-version: '3.8'
-
 services:
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      cache_from:
+        - frontend:latest
     ports:
       - "80:80"
     environment:
-      # Frontend Environment Variables
-      - VITE_SPHERE_API_KEY=A5AABB9058C44FCDB3A6E3F248265E21
-      - VITE_LONGDO_MAP_API_KEY=12a91099fdf18c01e89d872f6175c84b
+      - VITE_SPHERE_API_KEY=${VITE_SPHERE_API_KEY}
+      - VITE_LONGDO_MAP_API_KEY=${VITE_LONGDO_MAP_API_KEY}
       - VITE_API_URL=http://backend-api:8000
       - NODE_ENV=production
     depends_on:
       - backend-api
     networks:
       - app-network
-    restart: unless-stopped
-    
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+
   backend-api:
     build:
       context: ./backend-api
       dockerfile: Dockerfile
+      cache_from:
+        - backend-api:latest
     ports:
       - "8000:8000"
     environment:
-      # Database
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db-service:5432/ai_detection
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres  
-      - DB_HOST=db-service
-      - DB_PORT=5432
-      - DB_NAME=ai_detection
-      
-      # Service URLs
       - ML_SERVICE_URL=http://ai-inference-service:8080
       - AI_SERVICE_URL=http://ai-inference-service:8080
-      
-      # Security
-      - JWT_SECRET_KEY=1f7e6056d57d55fc13a004f569057dfcd6136259ef9a39b9d7fe95dcd80cbef9
-      - SECRET_KEY=1f7e6056d57d55fc13a004f569057dfcd6136259ef9a39b9d7fe95dcd80cbef9
-      
-      # Cloudinary
-      - CLOUDINARY_CLOUD_NAME=ddzwlyj5y
-      - CLOUDINARY_API_KEY=579724167749572
-      - CLOUDINARY_API_SECRET=qQqWaPMZDNEDTbf7Fo6p5YkOXhs
-      
-      # API Settings
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - SECRET_KEY=${SECRET_KEY}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
       - API_HOST=0.0.0.0
       - API_PORT=8000
       - DEBUG=false
@@ -60,16 +52,22 @@ services:
         condition: service_started
     networks:
       - app-network
-    restart: unless-stopped
-    
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1.00'
+          memory: 1G
+
   ai-inference-service:
     build:
       context: ./ai-inference-service
       dockerfile: Dockerfile
+      cache_from:
+        - ai-inference-service:latest
     ports:
       - "8080:8080"
     environment:
-      # AI Service Settings
       - HOST=0.0.0.0
       - PORT=8080
       - MODEL_PATH=/app/model
@@ -81,12 +79,19 @@ services:
       - ./ai-inference-service/model:/app/model
     networks:
       - app-network
-    restart: unless-stopped
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1.00'
+          memory: 2G
 
   db-service:
     build:
       context: ./postgres
       dockerfile: Dockerfile
+      cache_from:
+        - db-service:latest
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -96,13 +101,18 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
-    restart: unless-stopped
+    restart: always
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d ai_detection"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
 
 networks:
   app-network:

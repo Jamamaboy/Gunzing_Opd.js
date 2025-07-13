@@ -1,29 +1,33 @@
 # Build stage
-FROM node:18-alpine as build
+FROM node:24-alpine3.21 AS build
 
 WORKDIR /app
 
-# ติดตั้ง dependencies
-COPY package*.json ./
-RUN npm ci
+# Install dependencies only when needed
+COPY package.json package-lock.json ./
+RUN npm ci --prefer-offline --no-audit --progress=false
 
-# Copy source code
+# Copy only necessary files for build
 COPY . .
 
 # Build app
 RUN npm run build
 
-# Runtime stage
-FROM nginx:alpine
+# Production stage
+FROM nginx:1.25-alpine AS production
 
-# Copy built files to nginx
+# Remove default nginx static assets
+RUN rm -rf /usr/share/nginx/html/*
+
+# Copy built assets from build stage
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Copy custom nginx config if needed
+# Copy custom nginx config if present
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port
+# Set non-root user for security (optional, if permissions allow)
+# USER nginx
+
 EXPOSE 80
 
-# Start nginx
 CMD ["nginx", "-g", "daemon off;"]
