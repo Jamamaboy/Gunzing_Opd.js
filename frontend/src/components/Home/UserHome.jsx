@@ -44,20 +44,20 @@ const UserHome = () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    
+
     input.onchange = (e) => {
       const file = e.target.files[0];
       if (file) {
         setImageForPreview(file);
         const reader = new FileReader();
         reader.onload = (event) => {
-          navigate('/imagePreview', { 
-            state: { 
+          navigate('/imagePreview', {
+            state: {
               imageData: event.target.result,
               sourcePath: '/home',
               fromCamera: false,
               uploadFromCameraPage: false
-            } 
+            }
           });
         };
         reader.readAsDataURL(file);
@@ -77,18 +77,19 @@ const UserHome = () => {
                 <p className="text-sm text-gray-600">เครื่องมือช่วยจัดการข้อมูลที่ใช้งานง่าย</p>
                 <p className="text-sm text-gray-600">และมีประสิทธิภาพ</p>
               </div>
-              <div className="flex w-full gap-4 justify-center">
-                <Link 
-                  to="/camera" 
-                  className="w-40 min-w-[140px] bg-red-800 text-white py-3 px-4 rounded-md flex items-center justify-center gap-2 transition-colors hover:bg-red-900"
+              <div className="flex flex-col w-full gap-4 justify-center">
+                <Link
+                  to="/camera"
+                  className="w-full min-w-[140px] bg-red-800 text-white py-3 px-4 rounded-md flex items-center justify-center gap-2 transition-colors hover:bg-red-900"
                   onClick={() => setActiveTab('camera')}
                 >
                   <FaCamera className="w-5 h-5" />
                   <span>ถ่ายภาพ</span>
                 </Link>
-                <button 
-                  className="w-40 min-w-[140px] border border-red-800 text-red-800 py-3 px-4 rounded-md flex items-center justify-center gap-2 transition-colors hover:bg-red-50"
+                <button
+                  className="w-full min-w-[140px] border border-red-800 text-red-800 py-3 px-4 rounded-md flex items-center justify-center gap-2 transition-colors hover:bg-red-50"
                   onClick={handleImageUpload}
+                  // onClick={() => navigate('/tutorial')}
                 >
                   <FaUpload className="w-5 h-5" />
                   <span>อัพโหลดภาพ</span>
@@ -99,10 +100,10 @@ const UserHome = () => {
               <h2 className="text-lg font-medium mb-6">ฟีเจอร์อื่นๆ</h2>
               <div className="grid grid-cols-4 gap-4">
                 {features.map((feature, index) => (
-                  <MobileFeatureIcon 
-                    key={index} 
-                    Icon={feature.Icon} 
-                    label={feature.label} 
+                  <MobileFeatureIcon
+                    key={index}
+                    Icon={feature.Icon}
+                    label={feature.label}
                     path={feature.path}
                   />
                 ))}
@@ -118,15 +119,15 @@ const UserHome = () => {
               <p className="text-gray-600">เครื่องมือช่วยจัดการข้อมูลที่ใช้งานง่ายและมีประสิทธิภาพ</p>
             </div>
             <div className="flex justify-center gap-4 mb-12">
-              <Link 
-                to="/camera" 
+              <Link
+                to="/camera"
                 className="bg-red-800 hover:bg-red-900 text-white px-6 py-3 rounded-md flex items-center w-40 gap-2 justify-center transition-colors"
                 onClick={() => setActiveTab('camera')}
               >
                 <FaCamera size={20} /> ถ่ายภาพ
               </Link>
-              <button 
-                className="bg-white border border-red-800 text-red-800 px-6 py-3 rounded-md flex items-center gap-2 justify-center transition-colors hover:bg-red-50" 
+              <button
+                className="bg-white border border-red-800 text-red-800 px-6 py-3 rounded-md flex items-center gap-2 justify-center transition-colors hover:bg-red-50"
                 onClick={handleImageUpload}
               >
                 <FaUpload size={20} /> อัปโหลดภาพ

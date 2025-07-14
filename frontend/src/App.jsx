@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import Layout2 from './components/Layout2';
 import Layout3 from './components/Layout3';
 import Home from "./pages/Home";
+import TutorialPage from './pages/TutorialPage';
 import CameraPage from './components/Camera/Camera';
 import ImagePreview from './components/Camera/ImagePreview';
 import Login from './pages/Login';
@@ -64,6 +65,7 @@ const App = () => {
           </SessionGuard>
         </ProtectedRoute>
       } />
+      <Route path='/tutorial' element={<TutorialPage />} />
 
       {/* Layout */}
       <Route element={

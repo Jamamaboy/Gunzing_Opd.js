@@ -1,16 +1,16 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
-import { 
+import {
     Upload, X, FileSpreadsheet, AlertCircle, CheckCircle,
-    Loader2, ChevronLeft, ChevronRight, Database, 
+    Loader2, ChevronLeft, ChevronRight, Database,
     AlertTriangle, MapPin
 } from 'lucide-react';
 import { CSVUploadService } from '../../../services/csvUploadService';
-import { 
-    searchProvinces, 
-    searchDistricts, 
-    searchSubdistricts 
+import {
+    searchProvinces,
+    searchDistricts,
+    searchSubdistricts
 } from '../../../services/geographyService';
 import { formatDateForDisplay } from '../../../utils/dateUtils';
 
@@ -36,12 +36,12 @@ const Upload_Csv_File = () => {
 
     // ส่วนการแสดงผลข้อมูลใน Table - เพิ่ม columns สำหรับ Geography
     const columnsToDisplay = [
-        'เลขที่คดี', 'รับของกลางจาก', 'ลำดับของกลาง', 'วันที่เกิดเหตุ', 
-        'สถานที่เกิดเหตุ', 'หมู่ที่', 'ตำบล', 'อำเภอ', 'จังหวัด', 
-        'เลขที่การตรวจ', 'จำนวน', 'หน่วย', 'สีของกลาง', 
-        'เส้นผ่านศูนย์ กลาง(มม.), หนา (มม.)', 'ขอบ (มม.)', 
-        'น้ำหนักต่อเม็ด(มก.)', 'รหัสตัวพิมพ์', 'กลุ่มยา (G)', 
-        'Meth', 'Amp', 'Caff', 'Para', 'Mdma', 'Mda', 'Ket', 'อื่น ๆ', 
+        'เลขที่คดี', 'รับของกลางจาก', 'ลำดับของกลาง', 'วันที่เกิดเหตุ',
+        'สถานที่เกิดเหตุ', 'หมู่ที่', 'ตำบล', 'อำเภอ', 'จังหวัด',
+        'เลขที่การตรวจ', 'จำนวน', 'หน่วย', 'สีของกลาง',
+        'เส้นผ่านศูนย์ กลาง(มม.), หนา (มม.)', 'ขอบ (มม.)',
+        'น้ำหนักต่อเม็ด(มก.)', 'รหัสตัวพิมพ์', 'กลุ่มยา (G)',
+        'Meth', 'Amp', 'Caff', 'Para', 'Mdma', 'Mda', 'Ket', 'อื่น ๆ',
         'ผู้ต้องหา', 'ความชื้น (%)', 'สัญลักษณ์บนหีบห่อ', 'รูปแบบการห่อหุ้ม'
     ];
 
@@ -51,7 +51,7 @@ const Upload_Csv_File = () => {
 
         setIsProcessingGeography(true);
         console.log('🌍 เริ่มประมวลผลข้อมูล Geography...');
-        
+
         try {
             const processedRows = [];
             const geographyMapping = new Map();
@@ -65,7 +65,7 @@ const Upload_Csv_File = () => {
             for (let i = 0; i < data.length; i++) {
                 const row = data[i];
                 const processedRow = { ...row };
-                
+
                 // ดึงข้อมูลที่อยู่จาก CSV
                 const provinceName = row['จังหวัด']?.toString().trim();
                 const districtName = row['อำเภอ']?.toString().trim();
@@ -80,14 +80,14 @@ const Upload_Csv_File = () => {
                 if (provinceName && districtName && subdistrictName) {
                     // สร้าง key สำหรับ mapping
                     const geoKey = `${provinceName}|${districtName}|${subdistrictName}`;
-                    
+
                     // ตรวจสอบว่าเคยค้นหาแล้วหรือไม่
                     if (geographyMapping.has(geoKey)) {
                         const cachedResult = geographyMapping.get(geoKey);
                         processedRow.subdistrict_id = cachedResult.subdistrict_id;
                         processedRow.district_id = cachedResult.district_id;
                         processedRow.province_id = cachedResult.province_id;
-                        
+
                         if (cachedResult.subdistrict_id) {
                             stats.foundSubdistricts++;
                         } else {
@@ -98,42 +98,42 @@ const Upload_Csv_File = () => {
                             // ✅ ค้นหาจังหวัด - ใช้ฟังก์ชันที่ import แล้ว
                             console.log(`🔍 ค้นหาจังหวัด: ${provinceName}`);
                             const provinceResult = await searchProvinces(provinceName);
-                            
+
                             if (provinceResult.success && provinceResult.data.length > 0) {
-                                const province = provinceResult.data.find(p => 
+                                const province = provinceResult.data.find(p =>
                                     p.province_name.toLowerCase().includes(provinceName.toLowerCase()) ||
                                     provinceName.toLowerCase().includes(p.province_name.toLowerCase())
                                 );
 
                                 if (province) {
                                     console.log(`✅ พบจังหวัด:`, province);
-                                    
+
                                     // ✅ ค้นหาอำเภอในจังหวัดนั้น - ใช้ฟังก์ชันที่ import แล้ว
                                     console.log(`🔍 ค้นหาอำเภอ: ${districtName} ในจังหวัด: ${province.province_name}`);
                                     const districtResult = await searchDistricts(districtName, province.id);
-                                    
+
                                     if (districtResult.success && districtResult.data.length > 0) {
-                                        const district = districtResult.data.find(d => 
+                                        const district = districtResult.data.find(d =>
                                             d.district_name.toLowerCase().includes(districtName.toLowerCase()) ||
                                             districtName.toLowerCase().includes(d.district_name.toLowerCase())
                                         );
 
                                         if (district) {
                                             console.log(`✅ พบอำเภอ:`, district);
-                                            
+
                                             // ✅ ค้นหาตำบลในอำเภอนั้น - ใช้ฟังก์ชันที่ import แล้ว
                                             console.log(`🔍 ค้นหาตำบล: ${subdistrictName} ในอำเภอ: ${district.district_name}`);
                                             const subdistrictResult = await searchSubdistricts(subdistrictName, district.id);
-                                            
+
                                             if (subdistrictResult.success && subdistrictResult.data.length > 0) {
-                                                const subdistrict = subdistrictResult.data.find(s => 
+                                                const subdistrict = subdistrictResult.data.find(s =>
                                                     s.subdistrict_name.toLowerCase().includes(subdistrictName.toLowerCase()) ||
                                                     subdistrictName.toLowerCase().includes(s.subdistrict_name.toLowerCase())
                                                 );
 
                                                 if (subdistrict) {
                                                     console.log(`✅ พบตำบล:`, subdistrict);
-                                                    
+
                                                     const geoData = {
                                                         subdistrict_id: subdistrict.id,
                                                         district_id: district.id,
@@ -142,17 +142,17 @@ const Upload_Csv_File = () => {
                                                         district_name: district.district_name,
                                                         province_name: province.province_name
                                                     };
-                                                    
+
                                                     // เก็บใน cache
                                                     geographyMapping.set(geoKey, geoData);
-                                                    
+
                                                     // เพิ่มข้อมูลใน row
                                                     processedRow.subdistrict_id = subdistrict.id;
                                                     processedRow.district_id = district.id;
                                                     processedRow.province_id = province.id;
-                                                    
+
                                                     stats.foundSubdistricts++;
-                                                    
+
                                                     console.log(`🎯 Row ${i + 1} - Subdistrict ID: ${subdistrict.id}`);
                                                 } else {
                                                     console.log(`❌ ไม่พบตำบล: ${subdistrictName}`);
@@ -204,7 +204,7 @@ const Upload_Csv_File = () => {
                 }
 
                 processedRows.push(processedRow);
-                
+
                 // อัปเดต progress
                 setUploadProgress(((i + 1) / data.length) * 50);
             }
@@ -267,9 +267,9 @@ const Upload_Csv_File = () => {
         setFileName(selectedFile.name);
         setError('');
         setShowInstructions(false);
-        
+
         const fileExtension = selectedFile.name.split('.').pop().toLowerCase();
-        
+
         const handleFileData = async (filteredData) => {
             if (filteredData.length === 0) {
                 setError("ไม่พบข้อมูลที่ถูกต้องในไฟล์");
@@ -279,19 +279,19 @@ const Upload_Csv_File = () => {
             // ✅ Pre-process วันที่สำหรับการแสดงผลใน Preview
             const preprocessedData = filteredData.map(row => {
                 const processedRow = { ...row };
-                
+
                 // แปลงวันที่สำหรับการแสดงผล
                 if (processedRow['วันที่เกิดเหตุ']) {
                     const originalDate = processedRow['วันที่เกิดเหตุ'];
                     const displayDate = formatDateForDisplay(originalDate);
-                    
+
                     // เก็บ original สำหรับ processing และ display สำหรับแสดงผล
                     processedRow._originalDate = originalDate;
                     processedRow['วันที่เกิดเหตุ'] = displayDate;
-                    
+
                     console.log(`📅 Date preprocessing: "${originalDate}" → "${displayDate}"`);
                 }
-                
+
                 return processedRow;
             });
 
@@ -306,34 +306,34 @@ const Upload_Csv_File = () => {
             }
 
             const cleanHeaders = Object.keys(firstValidRow).map(h => h.trim());
-            const filteredHeaders = cleanHeaders.filter(header => 
+            const filteredHeaders = cleanHeaders.filter(header =>
                 columnsToDisplay.includes(header) && !header.startsWith('_')
             );
-            
+
             setHeaders(filteredHeaders);
             setAllData(preprocessedData);
             setPreviewData(preprocessedData.slice(0, 10));
-            
+
             // ประมวลผลข้อมูล Geography (ใช้ original data)
             console.log('🚀 เริ่มประมวลผลข้อมูล Geography...');
             const originalDataForProcessing = preprocessedData.map(row => {
                 const originalRow = { ...row };
-                
+
                 // คืน original date สำหรับ processing
                 if (originalRow._originalDate) {
                     originalRow['วันที่เกิดเหตุ'] = originalRow._originalDate;
                     delete originalRow._originalDate;
                 }
-                
+
                 return originalRow;
             });
-            
+
             const processedGeoData = await processGeographyData(originalDataForProcessing);
             setProcessedData(processedGeoData);
-            
+
             console.log('✅ ประมวลผลข้อมูล Geography เสร็จสิ้น');
         };
-        
+
         if (fileExtension === 'csv') {
             Papa.parse(selectedFile, {
                 header: true,
@@ -345,11 +345,11 @@ const Upload_Csv_File = () => {
                         setError(`CSV parsing error: ${results.errors[0].message}`);
                         return;
                     }
-                
-                    const filteredData = results.data.filter(row => 
+
+                    const filteredData = results.data.filter(row =>
                         Object.values(row).some(value => value !== null && value !== '')
                     );
-                    
+
                     await handleFileData(filteredData);
                 },
                 error: (error) => {
@@ -364,20 +364,20 @@ const Upload_Csv_File = () => {
                     const workbook = XLSX.read(data, { type: 'array' });
                     const sheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[sheetName];
-                    
-                    const rawData = XLSX.utils.sheet_to_json(worksheet, { 
+
+                    const rawData = XLSX.utils.sheet_to_json(worksheet, {
                         header: 1,
-                        defval: null 
+                        defval: null
                     });
-                    
+
                     if (rawData.length === 0) {
                         setError('ไฟล์ Excel ไม่มีข้อมูล');
                         return;
                     }
-                    
+
                     let headerRowIndex = -1;
                     let nameTHColumnIndex = -1;
-                    
+
                     for (let i = 0; i < rawData.length; i++) {
                         const row = rawData[i];
                         if (row) {
@@ -391,15 +391,15 @@ const Upload_Csv_File = () => {
                             if (headerRowIndex !== -1) break;
                         }
                     }
-                    
+
                     if (headerRowIndex === -1) {
                         setError('ไม่พบแถวที่มีคอลัมน์ "เลขที่คดี" ในไฟล์');
                         return;
                     }
-                    
+
                     const headerRow = rawData[headerRowIndex];
                     const filteredHeaderRow = headerRow.slice(nameTHColumnIndex);
-                    
+
                     const processedData = [];
                     for (let i = headerRowIndex + 1; i < rawData.length; i++) {
                         if (rawData[i] && rawData[i].some(cell => cell !== null && cell !== '')) {
@@ -411,7 +411,7 @@ const Upload_Csv_File = () => {
                             processedData.push(dataRow);
                         }
                     }
-                    
+
                     if (processedData.length === 0) {
                         setError('ไม่พบข้อมูลหลังจากแถว header ที่มีคอลัมน์ "เลขที่คดี"');
                         return;
@@ -447,29 +447,29 @@ const Upload_Csv_File = () => {
     const handleDrop = useCallback((e) => {
         e.preventDefault();
         setIsDragging(false);
-        
+
         const droppedFile = e.dataTransfer.files[0];
         if (!droppedFile) return;
-        
+
         const fileExtension = droppedFile.name.split('.').pop().toLowerCase();
         if (!['csv', 'xlsx', 'xls'].includes(fileExtension)) {
             setError('Unsupported file format. Please upload a CSV or Excel file.');
             return;
         }
-        
+
         processFile(droppedFile);
     }, [processFile]);
 
     const handleFileChange = useCallback((e) => {
         const selectedFile = e.target.files[0];
         if (!selectedFile) return;
-        
+
         const fileExtension = selectedFile.name.split('.').pop().toLowerCase();
         if (!['csv', 'xlsx', 'xls'].includes(fileExtension)) {
             setError('Unsupported file format. Please upload a CSV or Excel file.');
             return;
         }
-        
+
         processFile(selectedFile);
     }, [processFile]);
 
@@ -485,11 +485,11 @@ const Upload_Csv_File = () => {
     const handleUpload = useCallback(async () => {
         const dataToUpload = processedData.length > 0 ? processedData : allData;
         if (!file || !dataToUpload || dataToUpload.length === 0) return;
-        
+
         setUploading(true);
         setUploadProgress(50); // เริ่มที่ 50% เพราะใช้ไปแล้วใน geography processing
         setError('');
-        
+
         try {
             // อัปเดต progress แบบ real-time
             const progressInterval = setInterval(() => {
@@ -498,18 +498,18 @@ const Upload_Csv_File = () => {
                     return prev + Math.random() * 10;
                 });
             }, 500);
-            
+
             // เรียกใช้ CSVUploadService
             const result = await CSVUploadService.uploadCSVData(dataToUpload, fileName);
-            
+
             clearInterval(progressInterval);
             setUploadProgress(100);
-            
+
             if (result.success) {
                 setUploadSuccess(true);
                 setUploadResults(result.data);
                 console.log('Upload successful:', result);
-                
+
                 // รีเซ็ตหลังจาก 5 วินาที
                 setTimeout(() => {
                     resetState();
@@ -517,7 +517,7 @@ const Upload_Csv_File = () => {
             } else {
                 throw new Error(result.message || 'Upload failed');
             }
-            
+
         } catch (error) {
             console.error('Upload error:', error);
             setError(`การอัปโหลดล้มเหลว: ${error.message}`);
@@ -534,7 +534,7 @@ const Upload_Csv_File = () => {
     // ✅ ลบปุ่มทดสอบ encoding ออก หรือปรับให้ทดสอบแบบง่ายๆ
     const handleTestCaseQuery = () => {
         console.log('🧪 Testing Case Query...');
-        
+
         const testCases = ['1/2568', '2/2568', '3/2568'];
         testCases.forEach(async (caseId) => {
             try {
@@ -559,7 +559,7 @@ const Upload_Csv_File = () => {
                     </div>
 
                     {!file && (
-                    <div 
+                    <div
                         className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
                         isDragging ? 'border-[#990000] bg-[#ffecec]' : 'border-gray-300 hover:border-[#990000]'
                         }`}
@@ -568,11 +568,11 @@ const Upload_Csv_File = () => {
                         onDrop={handleDrop}
                         onClick={() => fileInputRef.current.click()}
                     >
-                        <input 
-                        type="file" 
+                        <input
+                        type="file"
                         ref={fileInputRef}
-                        className="hidden" 
-                        accept=".csv,.xlsx,.xls" 
+                        className="hidden"
+                        accept=".csv,.xlsx,.xls"
                         onChange={handleFileChange}
                         />
                         <Upload className="mx-auto h-12 w-12 text-gray-400" />
@@ -584,7 +584,7 @@ const Upload_Csv_File = () => {
                         </p>
                     </div>
                     )}
-                    
+
                     {error && (
                     <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-start">
                         <AlertCircle className="text-red-500 mr-2 flex-shrink-0" size={20} />
@@ -600,8 +600,8 @@ const Upload_Csv_File = () => {
                                 <span className="font-medium text-blue-800">กำลังประมวลผลข้อมูลที่อยู่...</span>
                             </div>
                             <div className="mt-2 w-full bg-blue-200 rounded-full h-2">
-                                <div 
-                                    className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                                <div
+                                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                                     style={{ width: `${uploadProgress}%` }}
                                 ></div>
                             </div>
@@ -657,7 +657,7 @@ const Upload_Csv_File = () => {
                             )}
                         </div>
                     )}
-                    
+
                     {file && !error && (
                     <div className="mt-4">
                         <div className="flex items-center justify-between p-3 bg-[#ffecec] border border-[#ffcccc] rounded-md">
@@ -665,7 +665,7 @@ const Upload_Csv_File = () => {
                                 <FileSpreadsheet className="text-[#990000] mr-2" size={20} />
                                 <span className="font-medium text-[#990000]">{fileName}</span>
                             </div>
-                            <button 
+                            <button
                                 onClick={handleClearFile}
                                 className="text-gray-500 hover:text-red-500 transition-colors"
                             >
@@ -674,7 +674,7 @@ const Upload_Csv_File = () => {
                         </div>
                     </div>
                     )}
-                    
+
                     {previewData && headers.length > 0 && (
                     <div className="mt-6">
                         <h3 className="font-medium text-gray-700 mb-2">
@@ -686,7 +686,7 @@ const Upload_Csv_File = () => {
                                     <tr>
                                         {headers.map((header, index) => (
                                             columnsToDisplay.includes(header) && (
-                                                <th 
+                                                <th
                                                     key={index}
                                                     className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                                 >
@@ -701,7 +701,7 @@ const Upload_Csv_File = () => {
                                         <tr key={rowIndex}>
                                             {headers.map((header, colIndex) => (
                                                 columnsToDisplay.includes(header) && (
-                                                    <td 
+                                                    <td
                                                         key={`${rowIndex}-${colIndex}`}
                                                         className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap"
                                                     >
@@ -716,14 +716,14 @@ const Upload_Csv_File = () => {
                                 </tbody>
                             </table>
                         </div>
-                        
+
                         {((processedData.length > 0 ? processedData : allData).length > rowsPerPage) && (
                             <div className="mt-4 flex items-center justify-between">
                                 <p className="text-sm text-gray-500">
                                     แสดง {((currentPage - 1) * rowsPerPage) + 1} - {Math.min(currentPage * rowsPerPage, (processedData.length > 0 ? processedData : allData).length)} จากทั้งหมด {(processedData.length > 0 ? processedData : allData).length} รายการ
                                 </p>
                                 <div className="flex items-center space-x-2">
-                                    <button 
+                                    <button
                                         onClick={() => handlePageChange(currentPage - 1)}
                                         disabled={currentPage === 1}
                                         className="p-1 rounded-md border border-gray-300 disabled:opacity-50"
@@ -733,7 +733,7 @@ const Upload_Csv_File = () => {
                                     <div className="text-sm">
                                         หน้า {currentPage} จาก {totalPages()}
                                     </div>
-                                    <button 
+                                    <button
                                         onClick={() => handlePageChange(currentPage + 1)}
                                         disabled={currentPage === totalPages()}
                                         className="p-1 rounded-md border border-gray-300 disabled:opacity-50"
@@ -745,7 +745,7 @@ const Upload_Csv_File = () => {
                         )}
                     </div>
                     )}
-                    
+
                     {file && !error && (
                         <div className="mt-6">
                             {uploadSuccess && uploadResults ? (
@@ -791,8 +791,8 @@ const Upload_Csv_File = () => {
                                         <span className="font-medium text-[#990000]">กำลังอัปโหลดข้อมูลลงฐานข้อมูล...</span>
                                     </div>
                                     <div className="w-full bg-gray-200 rounded-full h-3">
-                                        <div 
-                                            className="bg-[#990000] h-3 rounded-full transition-all duration-300" 
+                                        <div
+                                            className="bg-[#990000] h-3 rounded-full transition-all duration-300"
                                             style={{ width: `${uploadProgress}%` }}
                                         ></div>
                                     </div>
@@ -814,7 +814,7 @@ const Upload_Csv_File = () => {
                         </div>
                     )}
                 </div>
-            
+
                 {showInstructions && (
                     <div className="bg-white rounded-lg shadow-lg p-6">
                         <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
@@ -841,14 +841,14 @@ const Upload_Csv_File = () => {
 
                         <div className="mt-4 p-3 bg-[#ffecec] border border-[#ffcccc] rounded-md">
                             <p className="text-sm text-[#990000]">
-                                <strong>หมายเหตุ:</strong> ระบบจะประมวลผลข้อมูลที่อยู่และแปลงเป็น ID โดยอัตโนมัติ 
+                                <strong>หมายเหตุ:</strong> ระบบจะประมวลผลข้อมูลที่อยู่และแปลงเป็น ID โดยอัตโนมัติ
                                 หากมีคดีหรือจำเลยที่มีอยู่แล้วในระบบ จะใช้ข้อมูลที่มีอยู่
                             </p>
                         </div>
                     </div>
                 )}
                 <div className="h-16 md:h-0"></div>
-            </div> 
+            </div>
         </div>
     )
 }

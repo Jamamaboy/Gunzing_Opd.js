@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FiMenu, FiChevronDown, FiChevronUp, FiX } from 'react-icons/fi';
-import { FaHome, FaCamera, FaUpload, FaPills, FaHistory } from "react-icons/fa";
+import { FaHome, FaCamera, FaUpload, FaPills, FaHistory, FaQuestionCircle} from "react-icons/fa";
 import { FaMapLocationDot, FaFolderOpen, FaChartSimple } from "react-icons/fa6";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUI } from '../context/UIContext'; // เพิ่มการ import useUI
@@ -9,12 +9,12 @@ const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobile, setIsMobile] = useState(false);
-  
+
   // ใช้ state จาก UIContext แทน
   const {
-    isSidebarOpen, 
+    isSidebarOpen,
     setIsSidebarOpen,
-    isBottomSheetOpen, 
+    isBottomSheetOpen,
     setIsBottomSheetOpen,
     isUploadDropdownOpen,
     setIsUploadDropdownOpen,
@@ -22,10 +22,10 @@ const Navigation = () => {
     setActiveTab,
     toggleSidebar: uiToggleSidebar
   } = useUI();
-  
+
   const [sheetTranslateY, setSheetTranslateY] = useState('100%');
   const [sheetTransition, setSheetTransition] = useState('transform 0.3s ease-out');
-  
+
   const dropdownRef = useRef(null);
   const bottomSheetRef = useRef(null);
   const startY = useRef(0);
@@ -36,7 +36,7 @@ const Navigation = () => {
   // คำนวณ activeTab ให้รองรับ path ย่อย เมื่อเริ่มต้น
   useEffect(() => {
     const path = location.pathname;
-    
+
     // จัดการกับ path ของ catalog
     if (path.startsWith('/selectCatalogType')) {
       setActiveTab('selectCatalogType');
@@ -50,58 +50,58 @@ const Navigation = () => {
   // เมื่อ location เปลี่ยน อัพเดต activeTab ด้วย
   useEffect(() => {
     const path = location.pathname;
-    
+
     // จัดการกับ path ของ catalog
     if (path.startsWith('/selectCatalogType')) {
       setActiveTab('selectCatalogType');
       return;
     }
-    
+
     // จัดการกับ path อื่นๆ
     const basePath = path.split('/')[1] || 'home';
     setActiveTab(basePath);
   }, [location.pathname, setActiveTab]);
-  
+
   // Define handleUploadOptionClick first (since it's used by handleUploadClick)
   const handleUploadOptionClick = (e) => {
     e.stopPropagation();
-    
+
     // Create file input element
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    
+
     input.onchange = (e) => {
       const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
         reader.onload = (event) => {
           // Navigate to ImagePreview route without specifying a mode
-          navigate('/imagePreview', { 
-            state: { 
+          navigate('/imagePreview', {
+            state: {
               imageData: event.target.result,
               // Add these important source tracking properties
               fromCamera: false,
               uploadFromCameraPage: false,
               // Use the current path as sourcePath
               sourcePath: location.pathname
-            } 
+            }
           });
         };
         reader.readAsDataURL(file);
       }
     };
-    
+
     input.click();
-    
+
     // ปิด dropdown เฉพาะตอน sidebar ย่อ
     if (!isSidebarOpen) {
       setIsUploadDropdownOpen(false);
     }
-    
+
     closeBottomSheet();
   };
-  
+
   // Define handleUploadClick to fix the error
   const handleUploadClick = (e) => {
     e.stopPropagation();
@@ -117,7 +117,7 @@ const Navigation = () => {
         setIsSidebarOpen(false);
       }
     };
-    
+
     checkScreenSize();
     window.addEventListener('resize', checkScreenSize);
     return () => window.removeEventListener('resize', checkScreenSize);
@@ -135,7 +135,7 @@ const Navigation = () => {
         setIsUploadDropdownOpen(false);
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isUploadDropdownOpen, isSidebarOpen, setIsUploadDropdownOpen]);
@@ -155,7 +155,7 @@ const Navigation = () => {
           if (sheetHeight.current === 0) {
             sheetHeight.current = bottomSheetRef.current.offsetHeight;
           }
-          setSheetTranslateY('0%'); 
+          setSheetTranslateY('0%');
           setSheetTransition('transform 0.3s ease-out');
         }
       });
@@ -189,6 +189,7 @@ const Navigation = () => {
     { id: 'selectCatalogType', icon: <FaFolderOpen size={24} />, text: "บัญชีวัตถุพยาน", path: "/selectCatalogType", showInBottom: false },
     { id: 'dashboard', icon: <FaChartSimple size={24} />, text: "แดชบอร์ด", path: "/dashboard", showInBottom: false },
     { id: 'map', icon: <FaMapLocationDot size={24} />, text: "แผนที่", path: "/map", showInBottom: true },
+    { id: 'Tutorial', icon: <FaQuestionCircle size={24} />, text: "วิธีการใช้งาน", path: "/tutorial", showInBottom: false,}
   ];
 
   // Update bottom sheet items - remove upload options since we're doing direct upload now
@@ -198,22 +199,22 @@ const Navigation = () => {
   ];
 
   const bottomNavItems = menuItems.filter(item => item.showInBottom);
-  
+
   const handleNavClick = (e, path, id) => {
     e.stopPropagation();
     setActiveTab(id);
     navigate(path);
-    
+
     if (!isSidebarOpen && id !== 'upload') {
       setIsUploadDropdownOpen(false);
     }
-    
+
     closeBottomSheet();
   };
 
   const toggleUploadDropdown = (e) => {
     e.stopPropagation();
-    
+
     if (!isSidebarOpen && !isMobile) {
       setIsSidebarOpen(true);
       setTimeout(() => {
@@ -235,7 +236,7 @@ const Navigation = () => {
   const closeBottomSheet = () => {
     setSheetTransition('transform 0.3s ease-out');
     setSheetTranslateY('100%');
-    
+
     setTimeout(() => {
       setIsBottomSheetOpen(false);
     }, 300);
@@ -309,7 +310,7 @@ const Navigation = () => {
   const toggleSidebar = () => {
     const newState = !isSidebarOpen;
     setIsSidebarOpen(newState);
-    
+
     // Close dropdown when sidebar is collapsed
     if (!newState) {
       setIsUploadDropdownOpen(false);
@@ -317,25 +318,25 @@ const Navigation = () => {
   };
 
   const Sidebar = () => (
-    <div className="h-full">      
+    <div className="h-full">
       <div className={`
-        h-full 
-        ${isSidebarOpen ? "w-64" : "w-14"} 
-        bg-gradient-to-b from-[#2C2C2C] to-[#1A1A1A] text-white 
-        flex flex-col 
-        transition-all duration-300 
+        h-full
+        ${isSidebarOpen ? "w-64" : "w-14"}
+        bg-gradient-to-b from-[#2C2C2C] to-[#1A1A1A] text-white
+        flex flex-col
+        transition-all duration-300
         overflow-hidden
         relative
       `}>
         <div className="p-4">
-          <button 
-            onClick={toggleSidebar} 
+          <button
+            onClick={toggleSidebar}
             className="text-white hover:text-gray-300 transition-colors"
           >
             <FiMenu size={24} />
           </button>
         </div>
-        
+
         <nav className="flex-1 space-y-1">
           {menuItems.map((item) => (
             <div key={item.id} className="relative" ref={item.id === 'upload' ? dropdownRef : null}>
@@ -371,7 +372,7 @@ const Navigation = () => {
       <div className="fixed bottom-0 left-0 right-0 z-40">
         {/* Background with blur */}
         <div className="absolute inset-0 bg-[#333333] border-t border-gray-700/50" />
-        
+
         {/* Main Navigation */}
         <div className="relative h-16 px-4">
           <div className="flex items-center justify-between h-full">
@@ -480,7 +481,7 @@ const Navigation = () => {
           </div>
 
           <div className="flex-shrink-0 px-4 pb-4 flex items-center justify-between border-b border-gray-700/50">
-            <h2 className="text-white text-lg font-medium">เมนูเพิ่มเติม</h2>
+            <h2 className="text-whูite text-lg font-medium">เมนูเพิ่มเติม</h2>
             <button
               onClick={closeBottomSheet}
               className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-gray-700"
