@@ -1,0 +1,113 @@
+                                      Table "public.chemical_compounds"
+   Column    |          Type          | Collation | Nullable |                    Default           
+
+-------------+------------------------+-----------+----------+------------------------------------------------
+ id          | integer                |           | not null | nextval('chemical_compounds_id_seq'::regclass)
+ name        | character varying(255) |           | not null |
+ description | text                   |           |          |
+Indexes:
+    "chemical_compounds_pkey" PRIMARY KEY, btree (id)
+Referenced by:
+    TABLE "narcotics_chemical_compounds" CONSTRAINT "narcotics_chemical_compounds_chemical_compound_id_fkey" FOREIGN KEY (chemical_compound_id) REFERENCES chemical_compounds(id)
+
+    
+
+                                      Table "public.exhibits"
+   Column    |          Type          | Collation | Nullable |               Default
+-------------+------------------------+-----------+----------+--------------------------------------
+ id          | integer                |           | not null | nextval('exhibits_id_seq'::regclass)
+ category    | character varying(100) |           |          | 
+ subcategory | character varying(100) |           |          | 
+Indexes:
+    "exhibits_pkey" PRIMARY KEY, btree (id)
+Referenced by:
+    TABLE "firearms" CONSTRAINT "firearms_exhibit_id_fkey" FOREIGN KEY (exhibit_id) REFERENCES exhibits(id)
+    TABLE "history" CONSTRAINT "history_exhibit_id_fkey" FOREIGN KEY (exhibit_id) REFERENCES exhibits(id)
+    TABLE "narcotics" CONSTRAINT "narcotics_exhibit_id_fkey" FOREIGN KEY (exhibit_id) REFERENCES exhibits(id)
+
+
+                                    Table "public.drug_forms"
+ Column |          Type          | Collation | Nullable |                Default
+--------+------------------------+-----------+----------+----------------------------------------
+ id     | integer                |           | not null | nextval('drug_forms_id_seq'::regclass)
+ name   | character varying(100) |           | not null | 
+Indexes:
+    "drug_forms_pkey" PRIMARY KEY, btree (id)
+Referenced by:
+    TABLE "narcotics" CONSTRAINT "narcotics_form_id_fkey" FOREIGN KEY (form_id) REFERENCES drug_forms(id)
+
+                                      Table "public.narcotic_example_images"
+   Column    |         Type          | Collation | Nullable |                       Default
+-------------+-----------------------+-----------+----------+-----------------------------------------------------
+ id          | integer               |           | not null | nextval('narcotic_example_images_id_seq'::regclass)
+ narcotic_id | integer               |           |          | 
+ image_url   | text                  |           |          | 
+ description | text                  |           |          | 
+ priority    | integer               |           |          | 
+ image_type  | character varying(50) |           |          | 
+Indexes:
+    "narcotic_example_images_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "narcotic_example_images_narcotic_id_fkey" FOREIGN KEY (narcotic_id) REFERENCES narcotics(id)
+Referenced by:
+    TABLE "narcotics_image_vectors" CONSTRAINT "narcotics_image_vectors_image_id_fkey" FOREIGN KEY (image_id) REFERENCES narcotic_example_images(id)
+
+
+                                          Table "public.narcotics"
+       Column       |          Type          | Collation | Nullable |                Default
+--------------------+------------------------+-----------+----------+---------------------------------------
+ id                 | integer                |           | not null | nextval('narcotics_id_seq'::regclass)
+ exhibit_id         | integer                |           |          | 
+ form_id            | integer                |           |          | 
+ characteristics    | character varying(100) |           |          | 
+ drug_type          | character varying(100) |           |          | 
+ drug_category      | character varying(100) |           |          | 
+ consumption_method | character varying(100) |           |          | 
+ effect             | text                   |           |          | 
+ weight_grams       | numeric(10,2)          |           |          | 
+Indexes:
+    "narcotics_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "narcotics_exhibit_id_fkey" FOREIGN KEY (exhibit_id) REFERENCES exhibits(id)
+Referenced by:
+    TABLE "narcotic_example_images" CONSTRAINT "narcotic_example_images_narcotic_id_fkey" FOREIGN KEY (narcotic_id) REFERENCES narcotics(id)
+    TABLE "narcotics_chemical_compounds" CONSTRAINT "narcotics_chemical_compounds_narcotic_id_fkey" FOREIGN KEY (narcotic_id) REFERENCES narcotics(id)
+    TABLE "narcotics_image_vectors" CONSTRAINT "narcotics_image_vectors_narcotic_id_fkey" FOREIGN KEY (narcotic_id) REFERENCES narcotics(id)
+    TABLE "narcotics_pills" CONSTRAINT "narcotics_pills_narcotic_id_fkey" FOREIGN KEY (narcotic_id) REFERENCES narcotics(id)
+
+
+             Table "public.narcotics_chemical_compounds"
+        Column        |     Type     | Collation | Nullable | Default 
+----------------------+--------------+-----------+----------+---------
+ narcotic_id          | integer      |           | not null | 
+ chemical_compound_id | integer      |           | not null | 
+ percentage           | numeric(5,2) |           |          | 
+Indexes:
+    "narcotics_chemical_compounds_pkey" PRIMARY KEY, btree (narcotic_id, chemical_compound_id)
+Foreign-key constraints:
+    "narcotics_chemical_compounds_chemical_compound_id_fkey" FOREIGN KEY (chemical_compound_id) REFERENCES chemical_compounds(id)
+    "narcotics_chemical_compounds_narcotic_id_fkey" FOREIGN KEY (narcotic_id) REFERENCES narcotics(id)
+
+                                  Table "public.narcotics_image_vectors"
+    Column    |     Type     | Collation | Nullable |                       Default
+--------------+--------------+-----------+----------+-----------------------------------------------------
+ id           | integer      |           | not null | nextval('narcotics_image_vectors_id_seq'::regclass)
+ narcotic_id  | integer      |           |          | 
+ image_id     | integer      |           |          | 
+ image_vector | vector(1536) |           |          | 
+Indexes:
+    "narcotics_image_vectors_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "narcotics_image_vectors_image_id_fkey" FOREIGN KEY (image_id) REFERENCES narcotic_example_images(id)
+    "narcotics_image_vectors_narcotic_id_fkey" FOREIGN KEY (narcotic_id) REFERENCES narcotics(id)
+
+                    Table "public.narcotics_pills"
+    Column    |         Type          | Collation | Nullable | Default 
+--------------+-----------------------+-----------+----------+---------
+ narcotic_id  | integer               |           |          | 
+ color        | character varying(50) |           |          | 
+ diameter_mm  | numeric(5,2)          |           |          | 
+ thickness_mm | numeric(5,2)          |           |          | 
+ edge_shape   | character varying(50) |           |          | 
+Foreign-key constraints:
+    "narcotics_pills_narcotic_id_fkey" FOREIGN KEY (narcotic_id) REFERENCES narcotics(id)

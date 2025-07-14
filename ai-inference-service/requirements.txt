@@ -1,0 +1,30 @@
+# API และ Server
+fastapi
+uvicorn
+python-multipart
+pydantic
+pydantic-settings
+
+# ML ทั่วไป
+numpy
+pillow
+scikit-learn
+
+# Deep Learning
+torch
+torchvision
+tensorflow
+
+# Computer Vision
+opencv-python
+ultralytics
+albumentations
+
+# Utilities
+python-dotenv
+httpx
+loguru
+
+# Development tools (optional)
+pytest
+black
